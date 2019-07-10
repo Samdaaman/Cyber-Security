@@ -1,7 +1,3 @@
-import base64
-from binascii import hexlify
-
-
 def trynumberAs(data):
     index = 0
     while index < len(data):
@@ -15,10 +11,10 @@ def trynumberAs(data):
         index += 1
 
 
-with open("./e51d35ed.bin", 'r') as file:
+with open("./tests/vingere.bin", 'r') as file:
     data = file.read()
 
-length = 9
+length = 5
 common_strings_unsorted = {}
 for index in range(len(data) - length):
     string_to_count = ""
