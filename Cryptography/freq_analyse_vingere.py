@@ -1,6 +1,6 @@
 ## Setup
-input_file_path = "test2.txt"
-key_length = 1
+input_file_path = "./tests/vingere.bin"
+key_length = 4
 known_chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
 # known_chars = ''
 ## End setup

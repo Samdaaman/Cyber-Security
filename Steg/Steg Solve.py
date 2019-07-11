@@ -1,7 +1,7 @@
 from PIL import Image
 # Make sure that pillow is installed
 # Setup
-img_path = 'tests/test.png'
+img_path = 'tests/steg_solve.png'
 out_path = 'tests/steg solve/'
 # End Setup
 
