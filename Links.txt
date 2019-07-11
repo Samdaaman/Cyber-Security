@@ -5,6 +5,8 @@ Easy Crypto - https://www.secsy.net/easy_cryptoCTF
 Identifying Ciphers - http://practicalcryptography.com/cryptanalysis/text-characterisation/identifying-unknown-ciphers/
 Identifying Website Software - wappalyzer extension
 Easy Stego - https://www.secsy.net/easy_stegoCTF
+Partial Content 1 - https://stackoverflow.com/questions/21775860/python-how-to-download-file-using-range-of-bytes
+Partial Content 2 - https://stackoverflow.com/questions/33237902/firefox-wont-request-further-data-after-receiving-206-with-specified-content-ra
 ________________________________________________________________________
 Round 3:
 Apache Security - https://httpd.apache.org/docs/2.4/misc/security_tips.html
