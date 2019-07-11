@@ -1,4 +1,5 @@
-Audio Spectrum Viewer - https://academo.org/demos/spectrum-analyzer/
+Audio Spectrum Logarithmic - https://academo.org/demos/spectrum-analyzer/
+Audio Spectrum heightxwidth - http://convert.ing-now.com/audio-spectrogram-creator/
 XOR Cracker - http://xor.pw/#
 Sub Cipher Solver - https://quipqiup.com/
 Easy Crypto - https://www.secsy.net/easy_cryptoCTF
