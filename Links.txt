@@ -2,6 +2,7 @@ Audio Spectrum Logarithmic - https://academo.org/demos/spectrum-analyzer/
 Audio Spectrum heightxwidth - http://convert.ing-now.com/audio-spectrogram-creator/
 XOR Cracker - http://xor.pw/#
 Sub Cipher Solver - https://quipqiup.com/
+Solving Ciphers - https://www.dcode.fr/en
 Easy Crypto - https://www.secsy.net/easy_cryptoCTF
 Identifying Ciphers - http://practicalcryptography.com/cryptanalysis/text-characterisation/identifying-unknown-ciphers/
 Identifying Website Software - wappalyzer extension
