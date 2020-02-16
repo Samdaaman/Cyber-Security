@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-from flask import Flask, redirect, render_template, abort, request, jsonify
-from flask_jwt import JWT
+from flask import Flask, redirect, render_template, abort, request
 import auth
 app = Flask(__name__)
 
@@ -31,15 +30,24 @@ def page_admin_redirect():
 
 
 @app.route('/admin/login', methods=['GET', 'POST'])
-def page_login_get():
+def page_login():
     error = ''
     code = None
     if request.method == 'POST':
-        error, code = auth.try_auth(request)
+        error, code = auth.try_login(request)
     if auth.is_authed():
         return redirect('/admin/dashboard')
     else:
         return render_template('login.html', error=error), code
+
+
+@app.route('/admin/logout')
+def page_logout():
+    if auth.is_authed():
+        auth.logout()
+        return page_login()
+    else:
+        abort(403)
 
 
 @app.route('/admin/<req_page>')
@@ -48,7 +56,7 @@ def page_admin(req_page):
         abort(403)
 
     if req_page == 'dashboard':
-        return abort(501)
+        return render_template('dashboard.html', username=auth._identity()[1])
     elif req_page == 'settings':
         return abort(501)
     elif req_page == 'database':
@@ -61,20 +69,19 @@ def page_admin(req_page):
 
 @app.errorhandler(404)
 def page_not_found(e):
-    return "404 page not found", 404
+    return '404 page not found', 404
 
 
 @app.errorhandler(403)
 def page_forbidden(e):
-    return "403 Get outta here boi", 403
+    return '403 Get outta here boi<br>use <a href="/admin/login">This</a> page to login', 403
 
 
 @app.errorhandler(501)
 def page_not_implemented(e):
-    return "501 Sorry dev's haven't given this one a yarn yet", 501
+    return "501 Sorry dev\'s haven\'t given this one a yarn yet", 501
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     app.secret_key = 'yeet'
-    auth.init(app)
     app.run(debug=True)

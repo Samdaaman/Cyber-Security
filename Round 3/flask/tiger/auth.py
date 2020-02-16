@@ -1,33 +1,36 @@
-from flask import Flask
-from flask_jwt import jwt_required, current_identity, JWTError, JWT
+from flask import session
 
 
-def init(app):
-    JWT(app, _authenticate, _identity)
-
-
-@jwt_required()
-def _test_jwt():
-    return
+# TODO create user class
+#
 
 
 def is_authed():
-    try:
-        _test_jwt()
-        return True
-    except JWTError:
-        return False
+    return _identity() is not None
 
 
-def try_auth(received_request):
+def try_login(received_request):
     username = received_request.form.get('username')
     password = received_request.form.get('password')
-    if username is None or password is None:
-        return '401 - Incorrect auth present', 401
-    if _authenticate(username, password) is not None:
+    authed_user = _authenticate(username, password)
+    if authed_user is not None:
+        session[SESSION_KEY_USER_ID] = authed_user[0]
+        print('authed with user:' + ','.join([str(i) for i in authed_user]))
         return '', 200
     else:
         return 'Incorrect username or password', 401
+
+
+def logout():
+    session.pop(SESSION_KEY_USER_ID, None)
+
+
+def _identity():
+    user_id = session.get(SESSION_KEY_USER_ID)
+    if user_id is not None:
+        for row in db:
+            if row[0] == user_id:
+                return row
 
 
 def _init_db():
@@ -37,18 +40,14 @@ def _init_db():
 
 
 def _authenticate(username, password):
+    if username is None or password is None:
+        return None
     for row in db:
         if username == row[1] and password == row[2]:
             return row
 
 
-def _identity(payload):
-    user_id = payload['identity']
-    for row in db:
-        if row[0] == user_id:
-            return row
-    return None
-
+SESSION_KEY_USER_ID = 'user_id'
 
 db = []
 _init_db()
