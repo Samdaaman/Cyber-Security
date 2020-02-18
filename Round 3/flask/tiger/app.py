@@ -1,51 +1,61 @@
 #!/usr/bin/env python3
-from flask import Flask, redirect, render_template, abort, request
+from flask import Flask, redirect, render_template, abort, request, url_for, make_response
 import auth
 app = Flask(__name__)
 
 
 @app.route('/')
 def page_redirect_to_index():
-    return redirect('/index')
+    resp = redirect('/index')
+    return resp
 
 
 @app.route('/index')
 def page_index():
-    return render_template('index.html')
+    resp = make_response(render_template('index.html'))
+    return resp
 
 
 @app.route('/names/')
 def page_names_blank():
-    return 'please specify name'
+    resp = make_response('please specify name')
+    return resp
 
 
 @app.route('/names/<name>')
 def page_names(name):
-    return render_template('names.html', name=name)
+    resp = render_template('names.html', name=name)
+    return resp
 
 
 @app.route('/admin/')
 def page_admin_redirect():
-    return redirect('/admin/login')
+    resp = redirect(url_for('page_login'))
+    return resp
 
 
 @app.route('/admin/login', methods=['GET', 'POST'])
 def page_login():
     error = ''
     code = None
+    token = None
     if request.method == 'POST':
-        error, code = auth.try_login(request)
-    if auth.is_authed():
-        return redirect('/admin/dashboard')
+        error, code, token = auth.try_login(request)
+    if token is not None:
+        resp = redirect(url_for('page_admin', req_page='dashboard'))
+        auth.set_token_cookie(token, resp)
+        return resp
     else:
-        return render_template('login.html', error=error), code
+        resp = make_response(render_template('login.html', error=error), code)
+        return resp
 
 
 @app.route('/admin/logout')
 def page_logout():
     if auth.is_authed():
-        auth.logout()
-        return page_login()
+        resp = redirect(url_for('page_login'))
+        resp.delete_cookie('token')
+        return resp
     else:
         abort(403)
 
@@ -56,15 +66,18 @@ def page_admin(req_page):
         abort(403)
 
     if req_page == 'dashboard':
-        return render_template('dashboard.html', username=auth._identity()[1])
+        resp = make_response(render_template('dashboard.html', username=auth.current_user().username))
     elif req_page == 'settings':
-        return abort(501)
+        abort(501)
     elif req_page == 'database':
-        return abort(501)
+        abort(501)
     elif req_page == 'run':
-        return abort(501)
+        abort(501)
     else:
-        return abort(404)
+        abort(404)
+
+    auth.refresh_token(resp)
+    return resp
 
 
 @app.errorhandler(404)
@@ -83,5 +96,5 @@ def page_not_implemented(e):
 
 
 if __name__ == '__main__':
-    app.secret_key = 'yeet'
-    app.run(debug=True)
+    app.secret_key = auth.secret_key
+    app.run(debug=False, host='0.0.0.0')
