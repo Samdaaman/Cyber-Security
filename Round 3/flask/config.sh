@@ -1,5 +1,5 @@
 #!/bin/bash
-cd `dirname "$0"` #use the dir that the script is in
+cd "`dirname "$0"`" #use the dir that the script is in
 echo "Using dir `pwd`"
 rm -rf venv
 before=`which python`
