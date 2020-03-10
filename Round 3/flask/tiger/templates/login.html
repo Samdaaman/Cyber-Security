@@ -1,0 +1,16 @@
+<html>
+    <head>
+            
+    </head>
+    <body>
+        <h1>Login</h1>
+        {% if error != '' or error %}
+            <p class="error"><strong>Error:</strong> {{ error }}
+        {% endif %}
+        <form action="/admin/login" method="post">
+            <input type="text" placeholder="username" name="username">
+            <input type="password" placeholder="password" name="password">
+            <button type="submit">Login</button>
+        </form>
+    </body>
+</html>
