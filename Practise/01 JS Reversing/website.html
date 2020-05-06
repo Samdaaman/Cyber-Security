@@ -1,0 +1,41 @@
+<html>
+    <head>
+        <title>Sam's JS Reversing</title>
+    </head>
+    <body>
+        <input id="pass" type="text" placeholder="Enter Password"/>
+        <input type="submit" onclick="submit2()" title="Submit"/>
+
+        <script src="./data.js"></script>
+
+        <script>
+            function submit() {
+                if (document.getElementById("pass").value === "sam" ) {
+                    alert("goood job!");
+                }
+            }
+            function submit2() {
+                let step = data;
+                while (step) {
+                    step = eval(step)
+                }
+            }
+            
+            const alphabet = " ={}():;abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ ={}():;abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+            function d(str) {
+                for (let i = 0; i < str.length; i ++) {
+                    if (str[i] === '#') {
+                        if (parseInt(str.substring(i+1)) > 1) {
+                            str = str.substring(0, i) + "#" + String(parseInt(str.substring(i+1))-1) + "$" + str.substring(i+2+String(parseInt(str.substring(i+1))).length);
+                        } else {
+                            str = str.substring(0, i) + '"' + str.substring(i+2+String(parseInt(str.substring(i+1))).length);
+                        }
+                    } else if (alphabet.includes(str[i])) {
+                        str = str.substring(0, i) + alphabet[alphabet.lastIndexOf(str[i]) - 1] + str.substring(i+1);
+                    }
+                }
+                return str;
+            }
+        </script>
+    </body>
+</html>
