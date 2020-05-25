@@ -1,6 +1,7 @@
 #!python3 setup.py
 import os
 from sys import argv
+os.chdir(os.path.dirname(sys.argv[0]))
 no_shell = 'no-shell' in argv
 os.system("python3 -m venv venv")
 if os.path.isdir("venv"):
