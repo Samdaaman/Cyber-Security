@@ -1,14 +1,12 @@
-#!python3 config.py
-
+#!python3 setup.py
 import os
-
 os.system("python3 -m venv venv")
 if os.path.isdir("venv"):
     if os.path.isdir("venv/Scripts"):
         # windows
-        os.system("venv/Scripts/pip.exe install -r requirements.txt")
+        os.system("venv\\Scripts\\pip.exe install -r requirements.txt")
         print('\n\nConfigured for windows. Activating venv...')
-        os.system("cmd.exe /K venv/Scripts/activate.bat")
+        os.system("cmd.exe /K venv\\Scripts\\activate.bat")
 
     elif os.path.isdir("venv/bin"):
         # linux
