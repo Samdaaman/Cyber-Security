@@ -1,18 +1,22 @@
 #!python3 setup.py
 import os
+from sys import argv
+no_shell = 'no-shell' in argv
 os.system("python3 -m venv venv")
 if os.path.isdir("venv"):
     if os.path.isdir("venv/Scripts"):
         # windows
         os.system("venv\\Scripts\\pip.exe install -r requirements.txt")
-        print('\n\nConfigured for windows. Activating venv...')
-        os.system("cmd.exe /K venv\\Scripts\\activate.bat")
+        print('\n\nConfigured for windows.')
+        if not no_shell:
+            os.system("cmd.exe /K venv\\Scripts\\activate.bat")
 
     elif os.path.isdir("venv/bin"):
         # linux
         os.system("venv/bin/pip install -r requirements.txt")
-        print('\n\nConfigured for linux. Activating venv...')
-        os.system("/bin/bash --rcfile venv/bin/activate")
+        print('\n\nConfigured for linux.')
+        if not no_shell:
+            os.system("/bin/bash --rcfile venv/bin/activate")
 
     else:
         print('What version of venv is this, missing sub dirs')
