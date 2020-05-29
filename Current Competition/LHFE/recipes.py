@@ -54,7 +54,7 @@ class BinwalkRecipe(Recipe):
         super(BinwalkRecipe, self).__init__('Binwalk recipe')
 
     def run(self, book_name, fp, output):
-        output.append(format_command_output(book_name, self.name, fp, f'binwalk {fp}'))
+        output.append(format_command_output(book_name, self.name, fp, f'binwalk -e {fp}'))
 
 
 _all_recipe_books = [

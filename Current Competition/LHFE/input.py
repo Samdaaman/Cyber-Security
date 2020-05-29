@@ -1,5 +1,5 @@
 import os
-from constants import NEW_DIR, CURRENT_DIR
+from constants import NEW_DIR, CURRENT_DIR, GEN_PREFIX
 import utils
 import lhfe
 
@@ -8,12 +8,11 @@ def initial_tick():
     for folder in os.scandir(CURRENT_DIR):
         for file in os.scandir(os.path.join(CURRENT_DIR, folder.name)):
             file_path = os.path.join(CURRENT_DIR, folder.name, file.name)
-            if file.name[0:4] == 'lhfe_':
+            if file.name[0:len(GEN_PREFIX)] == GEN_PREFIX:
                 os.remove(file_path)
             else:
                 lhfe.Instance.file_paths_to_process.push(file_path)
     utils.debug('Completed initial input tick')
-    tick()
 
 
 def tick():

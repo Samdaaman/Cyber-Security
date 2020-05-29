@@ -11,11 +11,6 @@ class Stack:
             self._stack.remove(top)
             return top
 
-    def pop_all(self):
-        stack = self._stack
-        self._stack = []
-        return stack
-
     def not_empty(self):
         return len(self._stack) > 0
 

@@ -8,7 +8,6 @@ import recipes
 import lhfe
 from stack import Stack
 
-
 Instance = None  # type: Optional[LHFE]
 
 
@@ -22,7 +21,6 @@ def process_file(fp):
     recipes.run_all_recipe_books(file_ext, fp, output)
     for line in output:
         print(line)
-
 
 
 def _check():
@@ -46,7 +44,8 @@ class LHFE:
         self.file_paths_to_process = Stack()
         _check()
         input.initial_tick()
-        for fp in self.file_paths_to_process.pop_all():
+        while self.file_paths_to_process.not_empty():
+            fp = self.file_paths_to_process.pop()
             process_file(fp)
 
     @classmethod
