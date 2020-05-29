@@ -1,4 +1,4 @@
-sudo apt install -y python3-venv python3-pip git binwalk wireshark
+sudo apt install -y python3-venv python3-pip git binwalk wireshark vim
 git clone https://github.com/Samdaaman/Cyber-Security.git
 python3 Cyber-Security/setup.py no-shell
 wget --no-cache https://download-cf.jetbrains.com/python/pycharm-community-2020.1.1.tar.gz
