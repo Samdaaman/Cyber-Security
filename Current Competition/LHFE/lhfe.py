@@ -1,24 +1,16 @@
 import os
+import config
 import exceptions
 from constants import NEW_DIR, CURRENT_DIR, SOLVED_DIR
-from typing import Optional
-from exceptions import FatalException
-import input
+import incoming
 import recipes
-import lhfe
-from stack import Stack
-
-Instance = None  # type: Optional[LHFE]
+from classes import Target
 
 
-def process_file(fp):
-    print(f'Processing file {fp}')
-    path_parts = os.path.split(fp)
-    folder_path = path_parts[:-1]
-    file_name = path_parts[-1]
-    file_ext = file_name.split('.')[-1]
+def enumerate_target(target: Target):
+    print(f'Processing target {target}')
     output = []
-    recipes.run_all_recipe_books(file_ext, fp, output)
+    recipes.run_all_recipe_books(target, output)
     for line in output:
         print(line)
 
@@ -32,21 +24,17 @@ def _check():
 
 class LHFE:
     def __init__(self, debug):
-        global Instance
         self.debug = debug
         _check()
-        if Instance is None:
-            lhfe.Instance = self
-            Instance = self
-        else:
-            raise FatalException('Why are you making two instances')
 
-        self.file_paths_to_process = Stack()
-        _check()
-        input.initial_tick()
-        while self.file_paths_to_process.not_empty():
-            fp = self.file_paths_to_process.pop()
-            process_file(fp)
+        incoming.initial_tick()
+        incoming.tick()
+
+        while config.target_stack.not_empty():
+            while config.target_stack.not_empty():
+                next_target = config.target_stack.pop()
+                enumerate_target(next_target)
+            incoming.tick()
 
     @classmethod
     def start(cls, debug=True):
