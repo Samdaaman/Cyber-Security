@@ -9,7 +9,6 @@ class Target:
         self.file_name = os.path.basename(full_path)
         self.root_path = os.path.join(os.path.split(full_path)[0], os.path.split(full_path)[1])
         self.extension = self.file_name.split('.')[-1]
-        self.quality = QUALITY.UNDEFINED
 
     def __str__(self):
         return self.full_path.replace(CURRENT_DIR, '')
@@ -32,11 +31,16 @@ class Stack:
             self._done_keys.append(self._key(top))
             return top
 
+    def pop_all_copy(self) -> list:
+        copy_of_stack = self._stack.copy()
+        self._stack.clear()
+        return copy_of_stack
+
     def not_empty(self) -> bool:
         return len(self._stack) > 0
 
-    def get_all(self) -> List[object]:
-        return self._stack
+    # def get_all(self) -> List[object]:
+    #    return self._stack
 
     def _key(self, obj):
         return obj
@@ -53,23 +57,36 @@ class TargetStack(Stack):
         return target.full_path
 
 
-class Recipe:
-    def __init__(self, name):
-        self.name = name
+class FlagStack(Stack):
+    def push(self, flag: str, force=False) -> bool:
+        return super(FlagStack, self).push(flag, force)
 
-    def run(self, book_name, target: Target, output):
+    def pop(self) -> Optional[str]:
+        return super(FlagStack, self).pop()
+
+    def pop_all_copy(self) -> List[str]:
+        return super(FlagStack, self).pop_all_copy()
+
+
+class RecipeOutput:
+    def __init__(self, recipe):
+        self.recipe = recipe  # type: Recipe
+        self._output = []  # type: List[str]
+        self.quality = QUALITY.UNDEFINED  # type: QUALITY
+
+    def add_output(self, output: str):
+        self._output.append(output)
+
+    def raw(self):
+        return self._output
+
+
+class Recipe:
+    def __init__(self, name: str, applicable_extensions: List[str]):
+        self.name = name
+        self.applicable_extensions = applicable_extensions
+
+    def run(self, target: Target) -> RecipeOutput:
         raise NotImplemented
 
 
-class RecipeBook:
-    def __init__(self, name, known_extensions, recipes: List[Recipe]):
-        self.name = name
-        self.known_extensions = known_extensions
-        self.recipes = recipes
-
-    def run_all(self, target: Target, output):
-        for recipe in self.recipes:
-            recipe.run(self.name, target, output)
-
-    def _is_relevant(self, file_ext):
-        return file_ext in self.known_extensions

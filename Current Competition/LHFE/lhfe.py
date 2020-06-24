@@ -5,14 +5,20 @@ from constants import NEW_DIR, CURRENT_DIR, SOLVED_DIR
 import incoming
 import recipes
 from classes import Target
+import utils
 
 
 def enumerate_target(target: Target):
     print(f'Processing target {target}')
-    output = []
-    recipes.run_all_recipe_books(target, output)
-    for line in output:
-        print(line)
+    recipe_outputs = []
+    recipes.run_all_for_target(target, recipe_outputs)
+    for recipe_output in recipe_outputs:
+        for line in recipe_output.raw():
+            continue
+            print(line)
+
+    for flag in config.flag_stack.pop_all_copy():
+        print(flag)
 
 
 def _check():
@@ -23,8 +29,7 @@ def _check():
 
 
 class LHFE:
-    def __init__(self, debug):
-        self.debug = debug
+    def __init__(self):
         _check()
 
         incoming.initial_tick()
@@ -37,7 +42,8 @@ class LHFE:
             incoming.tick()
 
     @classmethod
-    def start(cls, debug=True):
+    def start(cls, debug=False):
         print(f'Initialising (debug={debug})')
-        print(f'Using dir "{os.getcwd()}"')
-        return cls(debug)
+        config.debug = debug
+        utils.debug(f'Using dir "{os.getcwd()}"')
+        return cls()
