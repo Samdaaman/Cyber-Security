@@ -42,9 +42,12 @@ def _process_commands():
                     number = int(input('Enter target #: '))
                     removed_targets = singletons.target_tracker.remove_done_root_target_and_children(delete_able_targets[number])
                     outgoing.remove_outputs(removed_targets)
-                    print(f'Removed {len(removed_targets)} targets successfully, please remove {delete_able_targets[number].file_name} from {NEW_DIR} directory')
+                    for removed_target in removed_targets:
+                        incoming.delete_target_files(removed_target)
+                    print(f'Removed {len(removed_targets)} targets successfully')
                 except Exception as ex:
                     print(f'Error {ex.args[0]}')
+                    raise ex
             else:
                 print('No deletable targets')
 

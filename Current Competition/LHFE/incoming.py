@@ -36,11 +36,11 @@ def tick() -> bool:
 
 
 def delete_target_files(target: Target):
-    if target.folder != CURRENT_DIR:
-        shutil.rmtree(target.folder)
-    else:
-        if os.path.isfile(target.rel_path):
-            os.unlink(target.rel_path)
+    if os.path.isfile(target.rel_path):
+        os.unlink(target.rel_path)
+
+    if target.folder != CURRENT_DIR and os.path.isdir(target.folder) and len([file for file in os.scandir(target.folder)]) == 0:
+        os.rmdir(target.folder)
 
     new_path = os.path.join(NEW_DIR, target.file_name)
     if os.path.isfile(new_path):
