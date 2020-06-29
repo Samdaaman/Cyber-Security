@@ -1,11 +1,11 @@
 import subprocess
 import os
 import shutil
-import config
-import utils
+from . import config
+from . import utils
 from typing import List
-from constants import GEN_PREFIX, QUALITY
-from classes import Target, Recipe, RecipeOutput
+from .constants import GEN_PREFIX, QUALITY
+from .classes import Target, Recipe, RecipeOutput
 
 _ALL_EXTENSION = '%ALL%'
 _IMG_EXTENSIONS = ['gif', 'png', 'jpg', 'jpeg', 'png', 'bmp']

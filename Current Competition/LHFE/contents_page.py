@@ -1,13 +1,13 @@
 from typing import List
-from classes import Target
-from config import target_stack
-from constants import QUALITY
+from .classes import Target
+from . import config
+from .constants import QUALITY
 
 CONTENTS_PAGE_FILENAME = 'contents.md'
 
 
 def update():
-    previous_targets = target_stack.get_all_done()
+    previous_targets = config.target_stack.get_all_done()
     lines = [
         f'# Contents',
         f'',

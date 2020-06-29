@@ -1,4 +1,4 @@
-from LHFE import LHFE
+from LHFE.lhfe import LHFE
 import shutil
 import os
 

@@ -1,6 +1,6 @@
 import os
 from typing import Optional, List, Tuple
-from constants import CURRENT_DIR, QUALITY
+from .constants import CURRENT_DIR, QUALITY
 
 
 class Target:

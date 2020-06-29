@@ -1,10 +1,9 @@
-import config
 import os
 import re
-import math
 from typing import List, Tuple
-from classes import Target
-from constants import GIT_KEEP
+from . import config
+from .classes import Target
+from .constants import GIT_KEEP
 
 
 def debug(string: str) -> None:

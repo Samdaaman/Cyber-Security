@@ -1,9 +1,9 @@
 import os
-from constants import NEW_DIR, CURRENT_DIR, GEN_PREFIX, GIT_KEEP
-import utils
 import shutil
-from classes import TargetStack, Target
-import config
+from .constants import NEW_DIR, CURRENT_DIR, GEN_PREFIX, GIT_KEEP
+from . import utils
+from .classes import Target
+from . import config
 
 
 def initial_tick():

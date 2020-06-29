@@ -1,12 +1,12 @@
 import os
-import config
-import exceptions
-from constants import NEW_DIR, CURRENT_DIR, SOLVED_DIR, QUALITY
-import incoming
-import recipes
-from classes import Target
-import utils
-import contents_page
+from . import config
+from . import exceptions
+from .constants import NEW_DIR, CURRENT_DIR, SOLVED_DIR, QUALITY
+from . import incoming
+from . import recipes
+from .classes import Target
+from . import utils
+from . import contents_page
 
 
 def enumerate_target(target: Target):
