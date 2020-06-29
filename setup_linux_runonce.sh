@@ -7,3 +7,6 @@ chmod +x burp.sh
 ./burp.sh
 rm burp.sh
 rm -- "$0"
+
+# install gdb peda
+# install hydra

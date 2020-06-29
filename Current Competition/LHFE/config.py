@@ -1,4 +1,3 @@
-from classes import FlagStack, TargetStack
+from classes import TargetStack
 debug = True
 target_stack = TargetStack()
-flag_stack = FlagStack()

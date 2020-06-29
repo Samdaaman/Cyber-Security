@@ -12,3 +12,8 @@ Partial Content 2 - https://stackoverflow.com/questions/33237902/firefox-wont-re
 ________________________________________________________________________
 Round 3:
 Apache Security - https://httpd.apache.org/docs/2.4/misc/security_tips.html
+
+________________________________________________________________________
+Initial setup:
+https://ghidra-sre.org/
+https://github.com/longld/peda

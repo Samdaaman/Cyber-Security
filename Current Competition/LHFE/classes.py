@@ -1,17 +1,18 @@
 import os
-from typing import Optional, List
+from typing import Optional, List, Tuple
 from constants import CURRENT_DIR, QUALITY
 
 
 class Target:
-    def __init__(self, full_path: str):
-        self.full_path = full_path
-        self.file_name = os.path.basename(full_path)
-        self.root_path = os.path.join(os.path.split(full_path)[0], os.path.split(full_path)[1])
+    def __init__(self, rel_path: str):
+        self.rel_path = rel_path
+        self.file_name = os.path.basename(rel_path)
+        self.folder = os.path.split(rel_path)[0]
         self.extension = self.file_name.split('.')[-1]
+        self.highest_quality = QUALITY.UNDEFINED
 
     def __str__(self):
-        return self.full_path.replace(CURRENT_DIR, '')
+        return self.rel_path.replace(CURRENT_DIR, '')
 
 
 class Stack:
@@ -31,7 +32,7 @@ class Stack:
             self._done_keys.append(self._key(top))
             return top
 
-    def pop_all_copy(self) -> list:
+    def pop_all(self) -> list:
         copy_of_stack = self._stack.copy()
         self._stack.clear()
         return copy_of_stack
@@ -42,43 +43,60 @@ class Stack:
     # def get_all(self) -> List[object]:
     #    return self._stack
 
+    def _get_done_keys(self) -> list:
+        return self._done_keys.copy()
+
     def _key(self, obj):
         return obj
 
 
 class TargetStack(Stack):
+    def __init__(self):
+        super(TargetStack, self).__init__()
+        self._done_targets = []  # type: List[Target]
+
     def push(self, target: Target, force=False) -> bool:
         return super(TargetStack, self).push(target, force)
 
+    def get_all_done(self) -> List[Target]:
+        return self._done_targets.copy()
+
     def pop(self) -> Optional[Target]:
-        return super(TargetStack, self).pop()
+        target = super(TargetStack, self).pop()
+        if target is not None and isinstance(target, Target):
+            self._done_targets.append(target)
+            return target
 
     def _key(self, target: Target):
-        return target.full_path
-
-
-class FlagStack(Stack):
-    def push(self, flag: str, force=False) -> bool:
-        return super(FlagStack, self).push(flag, force)
-
-    def pop(self) -> Optional[str]:
-        return super(FlagStack, self).pop()
-
-    def pop_all_copy(self) -> List[str]:
-        return super(FlagStack, self).pop_all_copy()
+        return target.rel_path
 
 
 class RecipeOutput:
-    def __init__(self, recipe):
+    def __init__(self, recipe, description: str):
         self.recipe = recipe  # type: Recipe
-        self._output = []  # type: List[str]
+        self.description = description  # type: str
+        self._raw_output = []  # type: List[str]
+        self._formatted_output = []  # type: List[str]
         self.quality = QUALITY.UNDEFINED  # type: QUALITY
+        self.possible_flags = []  # type: List[Tuple[str, str]]
 
-    def add_output(self, output: str):
-        self._output.append(output)
+    def add_flag(self, flag: Tuple[str, str]):
+        self._raw_output.append(f'Possible flag: {flag[1]} - {flag[0]}')
+        # self._formatted_output.append(f'### Possible flag ({flag[0]})')
+        # self._formatted_output.append(flag[1])
+        # self._formatted_output.append('')
+        self.possible_flags.append(flag)
+
+    def add_output(self, output: str, bold: bool = False):
+        bold_char = "**"
+        self._raw_output.append(output)
+        self._formatted_output.append(f'{bold_char if bold else ""}{output}{bold_char if bold else ""}')
 
     def raw(self):
-        return self._output
+        return self._raw_output
+
+    def formatted(self):
+        return self._formatted_output
 
 
 class Recipe:
