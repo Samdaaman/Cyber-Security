@@ -7,7 +7,7 @@ from .classes import RecipeOutput
 
 
 def run_shell_command(recipe_name: str, recipe_output: RecipeOutput, check_for_flag: bool, command: str, limit_lines: int = None) -> None:
-    singletons.dprint(f'Running command {command} for recipe {recipe_name}')
+    singletons.dprint(f'Running command "{command}" for recipe {recipe_name}')
     process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     result = process.communicate()[0].decode('utf-8')
 

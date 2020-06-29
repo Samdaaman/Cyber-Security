@@ -19,6 +19,61 @@ def run_all_for_target(target: Target) -> List[RecipeOutput]:
     return output_list
 
 
+class FileRecipe(Recipe):
+    def __init__(self):
+        super(FileRecipe, self).__init__('File recipe', [ALL_EXTENSION])
+
+    def run(self, target: Target) -> RecipeOutput:
+        command = f'file {target.rel_path}'
+        recipe_output = RecipeOutput(self, command)
+        run_shell_command(self.name, recipe_output, False, command)
+        return recipe_output
+
+
+class HeadRecipe(Recipe):
+    def __init__(self):
+        super(HeadRecipe, self).__init__('Head recipe', [ALL_EXTENSION])
+
+    def run(self, target: Target) -> RecipeOutput:
+        command = f'xxd {target.rel_path} | head -n 40'
+        recipe_output = RecipeOutput(self, command)
+        run_shell_command(self.name, recipe_output, False, command)
+        return recipe_output
+
+
+class TailRecipe(Recipe):
+    def __init__(self):
+        super(TailRecipe, self).__init__('Tail recipe', [ALL_EXTENSION])
+
+    def run(self, target: Target) -> RecipeOutput:
+        command = f'xxd {target.rel_path} | tail -n 40'
+        recipe_output = RecipeOutput(self, command)
+        run_shell_command(self.name, recipe_output, False, command)
+        return recipe_output
+
+
+class StringsLongRecipe(Recipe):
+    def __init__(self):
+        super(StringsLongRecipe, self).__init__('Strings (Long) recipe', [ALL_EXTENSION])
+
+    def run(self, target: Target) -> RecipeOutput:
+        command = f'strings {target.rel_path} -n 8'
+        recipe_output = RecipeOutput(self, command)
+        run_shell_command(self.name, recipe_output, False, command, 50)
+        return recipe_output
+
+
+class StringsAllRecipe(Recipe):
+    def __init__(self):
+        super(StringsAllRecipe, self).__init__('Strings (All) recipe', [ALL_EXTENSION])
+
+    def run(self, target: Target) -> RecipeOutput:
+        command = f'strings {target.rel_path}'
+        recipe_output = RecipeOutput(self, command)
+        run_shell_command(self.name, recipe_output, True, command, 50)
+        return recipe_output
+
+
 class BinwalkRecipe(Recipe):
     def __init__(self):
         super(BinwalkRecipe, self).__init__('Binwalk recipe', _IMG_EXTENSIONS)
@@ -43,21 +98,11 @@ class BinwalkRecipe(Recipe):
         return recipe_output
 
 
-class StringsRecipe(Recipe):
-    def __init__(self):
-        super(StringsRecipe, self).__init__('Strings recipe', [ALL_EXTENSION])
-
-    def run(self, target: Target) -> RecipeOutput:
-        command = f'strings {target.rel_path}'
-        recipe_output = RecipeOutput(self, command)
-        run_shell_command(self.name, recipe_output, True, command, 50)
-        return recipe_output
-
-
-
-
-
 all_recipes = [
+    FileRecipe(),
+    HeadRecipe(),
+    TailRecipe(),
     BinwalkRecipe(),
-    StringsRecipe()
+    StringsLongRecipe(),
+    StringsAllRecipe()
 ]
