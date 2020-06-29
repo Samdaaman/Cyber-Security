@@ -21,40 +21,40 @@ def initial_tick():
 def tick() -> bool:
     added_at_least_one = False
     singletons.dprint('tick start')
-    for a_file in os.scandir(NEW_DIR):
-        if a_file.name == GIT_KEEP:
+    for file in os.scandir(NEW_DIR):
+        if file.name == GIT_KEEP:
             continue
-        file_path = os.path.join(NEW_DIR, a_file.name)
-        if os.path.isfile(file_path):
-            file_name_parts = a_file.name.split('_')
-            try:
-                assert len(file_name_parts) > 1
-                assert file_name_parts[0][0] == 'c'
-                number = int(file_name_parts[0][1:])
-                assert number > 0
-                new_file_name = '_'.join(file_name_parts[1:])
-                new_root_dir = os.path.join(CURRENT_DIR, f'c{number}')
-                if not os.path.isdir(new_root_dir):
-                    os.mkdir(new_root_dir)
-                new_path = os.path.join(new_root_dir, new_file_name)
-                os.rename(file_path, new_path)
-                added = singletons.target_stack.push(Target(new_path))
-                added_at_least_one = added_at_least_one or added
-            except:
-                pass
-
-    # Enumerate current targets
-    # added_at_least_one = utils.enum_and_add_targets(CURRENT_DIR, GEN_PREFIX)
-
+        new_file_path = os.path.join(NEW_DIR, file.name)
+        current_file_path = os.path.join(CURRENT_DIR, file.name)
+        if os.path.isfile(new_file_path) and not os.path.isfile(current_file_path):
+            shutil.copyfile(new_file_path, current_file_path)
+            added = singletons.target_tracker.push(Target(current_file_path))
+            added_at_least_one = added_at_least_one or added
+            print(f'Adding {current_file_path} to target stack')
     singletons.dprint('tick end')
     return added_at_least_one
 
 
-def enum_and_add_targets(directory: str, ignore_prefix: str = None) -> bool:
+def delete_target_files(target: Target):
+    if target.folder != CURRENT_DIR:
+        shutil.rmtree(target.folder)
+    else:
+        if os.path.isfile(target.rel_path):
+            os.unlink(target.rel_path)
+
+    new_path = os.path.join(NEW_DIR, target.file_name)
+    if os.path.isfile(new_path):
+        os.unlink(new_path)
+
+
+def enum_and_add_targets(directory: str, ignore_prefix: str = None, parent_target: Target = None) -> bool:
     file_paths = _enum_dir_recursive(directory, ignore_prefix)
     added_at_least_one = False
     for file_path in file_paths:
-        added = singletons.target_stack.push(Target(file_path))
+        target = Target(file_path, parent_target)
+        added = singletons.target_tracker.push(target)
+        if parent_target is not None and added:
+            parent_target.child_targets.append(target)
         added_at_least_one = added_at_least_one or added
     return added_at_least_one
 

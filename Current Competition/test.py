@@ -1,4 +1,4 @@
-from LHFE.lhfe import LHFE
+from LHFE import lhfe
 import shutil
 import os
 
@@ -18,4 +18,4 @@ except:
     pass
 shutil.copytree(TEST, NEW)
 open(os.path.join(NEW, KEEP), 'w').close()
-LHFE.start(True)
+lhfe.start(True)

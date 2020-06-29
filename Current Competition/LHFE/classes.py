@@ -4,71 +4,67 @@ from .constants import CURRENT_DIR, QUALITY, ALL_EXTENSION
 
 
 class Target:
-    def __init__(self, rel_path: str):
+    def __init__(self, rel_path: str, parent_target=None):
         self.rel_path = rel_path
+        self.parent_target = parent_target  # type: Target
         self.file_name = os.path.basename(rel_path)
         self.folder = os.path.split(rel_path)[0]
         self.extension = self.file_name.split('.')[-1]
         self.highest_quality = QUALITY.UNDEFINED
+        self.child_targets = []  # type: List[Target]
 
     def __str__(self):
         return self.rel_path.replace(CURRENT_DIR, '')
 
 
-class Stack:
+class TargetTracker:
     def __init__(self):
-        self._stack = []
-        self._done_keys = []
-
-    def push(self, obj, force=True) -> bool:
-        if force or self._key(obj) not in self._done_keys:
-            self._stack.append(obj)
-            return True
-
-    def pop(self) -> Optional[object]:
-        if len(self._stack) > 0:
-            top = self._stack[len(self._stack) - 1]
-            self._stack.remove(top)
-            self._done_keys.append(self._key(top))
-            return top
-
-    def pop_all(self) -> list:
-        copy_of_stack = self._stack.copy()
-        self._stack.clear()
-        return copy_of_stack
-
-    def not_empty(self) -> bool:
-        return len(self._stack) > 0
-
-    # def get_all(self) -> List[object]:
-    #    return self._stack
-
-    def _get_done_keys(self) -> list:
-        return self._done_keys.copy()
-
-    def _key(self, obj):
-        return obj
-
-
-class TargetStack(Stack):
-    def __init__(self):
-        super(TargetStack, self).__init__()
+        self._current_targets = []  # type: List[Target]
         self._done_targets = []  # type: List[Target]
 
     def push(self, target: Target, force=False) -> bool:
-        return super(TargetStack, self).push(target, force)
+        if force or target.rel_path not in self._done_paths():
+            self._current_targets.append(target)
+            return True
+        print(self._done_paths())
 
     def get_all_done(self) -> List[Target]:
         return self._done_targets.copy()
 
     def pop(self) -> Optional[Target]:
-        target = super(TargetStack, self).pop()
-        if target is not None and isinstance(target, Target):
+        if self.not_empty():
+            target = self._current_targets[0]
+            self._current_targets.remove(target)
             self._done_targets.append(target)
             return target
 
-    def _key(self, target: Target):
-        return target.rel_path
+    def not_empty(self) -> bool:
+        return len(self._current_targets) > 0
+
+    def _done_paths(self) -> List[str]:
+        return [target.rel_path for target in self._done_targets]
+
+    def get_done_root_targets(self) -> List[Target]:
+        targets = []
+        for target in self._done_targets:
+            if target.parent_target is None:
+                targets.append(target)
+        return targets
+
+    def remove_done_root_target_and_children(self, target: Target) -> List[Target]:
+        removed_targets = []  # type: List[Target]
+        if target in self._done_targets:
+            self._done_targets.remove(target)
+            removed_targets.append(target)
+            for child_target in target.child_targets:
+                if child_target in self._done_targets:
+                    self._done_targets.remove(child_target)
+                    removed_targets.append(child_target)
+                else:
+                    print(f'Could not remove target {target} as it is not done yet')
+        else:
+            print(f'Could not remove target {target} as it is not done yet')
+        return removed_targets
 
 
 class RecipeOutput:

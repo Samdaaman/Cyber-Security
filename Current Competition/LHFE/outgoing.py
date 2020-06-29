@@ -8,6 +8,17 @@ from .constants import QUALITY, GEN_PREFIX
 CONTENTS_PAGE_FILENAME = 'contents.md'
 
 
+def get_file_name_for_target(target: Target):
+    return f'{os.path.join(os.path.split(target.rel_path)[0], GEN_PREFIX + os.path.split(target.rel_path)[1])}.md'
+
+
+def remove_outputs(targets: List[Target]):
+    for target in targets:
+        if os.path.isfile(get_file_name_for_target(target)):
+            os.unlink(get_file_name_for_target(target))
+    _contents_page_update()
+
+
 def add_output(target: Target, recipe_outputs: List[RecipeOutput]):
     folders = []
     path = target.folder
@@ -55,14 +66,14 @@ def add_output(target: Target, recipe_outputs: List[RecipeOutput]):
         output_lines.append('&nbsp;')
         output_lines.append('')
 
-    with open(os.path.join(target.folder, f'{GEN_PREFIX}{target.file_name}.md'), 'w') as fh:
+    with open(get_file_name_for_target(target), 'w') as fh:
         fh.write('  \n'.join(output_lines))
 
     _contents_page_update()
 
 
 def _contents_page_update():
-    previous_targets = singletons.target_stack.get_all_done()
+    previous_targets = singletons.target_tracker.get_all_done()
     lines = [
         f'# Contents',
         f'',
@@ -76,7 +87,7 @@ def _contents_page_update():
                      f'{previous_target.rel_path}'
                      f'  -  Quality: {previous_target.highest_quality}'
                      f'{"**" if hq else ""}]'
-                     f'({os.path.join(os.path.split(previous_target.rel_path)[0], GEN_PREFIX + os.path.split(previous_target.rel_path)[1])}.md)')
+                     f'({get_file_name_for_target(previous_target)})')
 
     with open(CONTENTS_PAGE_FILENAME, 'w') as fh:
         fh.write('\n  '.join(lines))

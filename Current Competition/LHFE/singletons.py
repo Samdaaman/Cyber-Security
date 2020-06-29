@@ -1,6 +1,6 @@
-from .classes import TargetStack
+from .classes import TargetTracker
 
-target_stack = TargetStack()
+target_tracker = TargetTracker()
 debug = None
 
 

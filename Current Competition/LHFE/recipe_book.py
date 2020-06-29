@@ -36,7 +36,7 @@ class BinwalkRecipe(Recipe):
             for file_to_move in files_to_move:
                 shutil.move(os.path.join(nested_out_path, file_to_move), os.path.join(out_path, file_to_move))
             os.rmdir(nested_out_path)
-            enum_and_add_targets(out_path)
+            enum_and_add_targets(out_path, parent_target=target)
         else:
             recipe_output.quality = QUALITY.LOW
             os.rmdir(out_path)

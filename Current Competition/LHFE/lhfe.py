@@ -20,22 +20,49 @@ def _check():
             raise exceptions.PathMissingException(path)
 
 
-class LHFE:
-    def __init__(self):
-        _check()
+def _process_targets():
+    while singletons.target_tracker.not_empty():
+        while singletons.target_tracker.not_empty():
+            next_target = singletons.target_tracker.pop()
+            enumerate_target(next_target)
 
-        incoming.initial_tick()
-        incoming.tick()
 
-        while singletons.target_stack.not_empty():
-            while singletons.target_stack.not_empty():
-                next_target = singletons.target_stack.pop()
-                enumerate_target(next_target)
-            incoming.tick()
+def _process_commands():
+    # Blocks and holds for any command that is not refreshing
+    while True:
+        command = input('Enter command (r=refresh, d=delete): ')
+        if command == 'r':
+            break
+        elif command == 'd':
+            delete_able_targets = singletons.target_tracker.get_done_root_targets()
+            if len(delete_able_targets) > 0:
+                for i in range(len(delete_able_targets)):
+                    print(f'Target #{str(i).ljust(2)} - {delete_able_targets[i].rel_path}')
+                try:
+                    number = int(input('Enter target #: '))
+                    removed_targets = singletons.target_tracker.remove_done_root_target_and_children(delete_able_targets[number])
+                    outgoing.remove_outputs(removed_targets)
+                    print(f'Removed {len(removed_targets)} targets successfully, please remove {delete_able_targets[number].file_name} from {NEW_DIR} directory')
+                except Exception as ex:
+                    print(f'Error {ex.args[0]}')
+            else:
+                print('No deletable targets')
 
-    @classmethod
-    def start(cls, debug=False):
-        print(f'Initialising (debug={debug})')
-        singletons.debug = debug
-        singletons.dprint(f'Using dir "{os.getcwd()}"')
-        return cls()
+
+def start(debug=False):
+    print(f'Initialising (debug={debug})')
+    singletons.debug = debug
+    singletons.dprint(f'Using dir "{os.getcwd()}"')
+    _check()
+
+    incoming.initial_tick()
+    incoming.tick()
+    _process_targets()
+
+    while True:
+        _process_commands()
+        try:
+            if incoming.tick():
+                _process_targets()
+        except KeyboardInterrupt:
+            print('Keyboard interrupt, going back to console')
