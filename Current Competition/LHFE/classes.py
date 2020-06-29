@@ -1,6 +1,6 @@
 import os
 from typing import Optional, List, Tuple
-from .constants import CURRENT_DIR, QUALITY
+from .constants import CURRENT_DIR, QUALITY, ALL_EXTENSION
 
 
 class Target:
@@ -107,4 +107,5 @@ class Recipe:
     def run(self, target: Target) -> RecipeOutput:
         raise NotImplemented
 
-
+    def applies_to_extension(self, target_extension: str) -> bool:
+        return self.applicable_extensions == ALL_EXTENSION or target_extension in self.applicable_extensions

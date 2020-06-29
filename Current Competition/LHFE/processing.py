@@ -1,46 +1,30 @@
-import os
 import re
+import subprocess
 from typing import List, Tuple
-from . import config
-from .classes import Target
-from .constants import GIT_KEEP
+from . import singletons
+from .constants import QUALITY
+from .classes import RecipeOutput
 
 
-def debug(string: str) -> None:
-    if config.debug:
-        print(string)
+def run_shell_command(recipe_name: str, recipe_output: RecipeOutput, check_for_flag: bool, command: str, limit_lines: int = None) -> None:
+    singletons.dprint(f'Running command {command} for recipe {recipe_name}')
+    process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    result = process.communicate()[0].decode('utf-8')
+
+    if check_for_flag:
+        possible_flags = _check_for_flag(result)
+        for possible_flag in possible_flags:
+            recipe_output.quality = QUALITY.HIGH
+            recipe_output.add_flag(possible_flag)
+
+    lines = result.split('\n')
+    if limit_lines is not None and len(lines) > limit_lines * 2:
+        lines = lines[:limit_lines+1] + ['[##### output truncated ######]'] + lines[-limit_lines:]
+    for line in lines:
+        recipe_output.add_output(line)
 
 
-def enum_dir_recursive(directory: str, ignore_prefix: str = None, reverse=True) -> List[str]:
-    file_paths = []
-    for root_dir, sub_dirs, file_names in os.walk(directory):
-        for file_name in file_names:
-            if file_name == GIT_KEEP:
-                continue
-            ignore = False
-            if ignore_prefix is not None:
-                for file_path_part in os.path.normpath(os.path.join(root_dir, file_name)).split(os.path.sep):
-                    if file_path_part.startswith(ignore_prefix):
-                        ignore = True
-                        break
-
-            if not ignore:
-                file_paths.append(os.path.join(root_dir, file_name))
-    if not reverse:
-        file_paths.reverse()
-    return file_paths
-
-
-def enum_and_add_targets(directory: str, ignore_prefix: str = None) -> bool:
-    file_paths = enum_dir_recursive(directory, ignore_prefix)
-    added_at_least_one = False
-    for file_path in file_paths:
-        added = config.target_stack.push(Target(file_path))
-        added_at_least_one = added_at_least_one or added
-    return added_at_least_one
-
-
-def check_for_flag(raw_string: str) -> List[Tuple[str, str]]:
+def _check_for_flag(raw_string: str) -> List[Tuple[str, str]]:
     search_strings = ['flag', 'galf']
     regexes = [(r"[a-zA-Z0-9]{4}:[a-zA-Z0-9]{12}", 0), (r"[a-zA-Z0-9]{12}:[a-zA-Z0-9]{4}", 1)]
     results = []
@@ -102,3 +86,4 @@ def _enumerate_common_ciphers(flag_str: str, flag_results: List[Tuple[str, str]]
 
 def _invmod(a, b):
     return 0 if a == 0 else 1 if b % a == 0 else b - _invmod(b % a, a) * b // a
+
