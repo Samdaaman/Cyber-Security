@@ -16,6 +16,10 @@ try:
     shutil.rmtree(NEW)
 except:
     pass
-shutil.copytree(TEST, NEW)
+os.mkdir(NEW)
+files = [file for file in os.scandir(TEST)]
+files.sort(key=os.path.getctime)
+for file in files:  # type: os.DirEntry
+    shutil.copy(file.path, NEW)
 open(os.path.join(NEW, KEEP), 'w').close()
 lhfe.start(True)

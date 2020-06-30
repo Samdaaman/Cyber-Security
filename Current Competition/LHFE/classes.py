@@ -75,6 +75,7 @@ class RecipeOutput:
         self._formatted_output = []  # type: List[str]
         self.quality = QUALITY.UNDEFINED  # type: QUALITY
         self.possible_flags = []  # type: List[Tuple[str, str]]
+        self.image_paths = []  # type: List[str]
 
     def add_flag(self, flag: Tuple[str, str]):
         self._raw_output.append(f'Possible flag: {flag[1]} - {flag[0]}')
@@ -87,6 +88,9 @@ class RecipeOutput:
         bold_char = "**"
         self._raw_output.append(output)
         self._formatted_output.append(f'{bold_char if bold else ""}{output}{bold_char if bold else ""}')
+
+    def add_image_path(self, image_path: str):
+        self.image_paths.append(image_path)
 
     def raw(self):
         return self._raw_output

@@ -66,6 +66,13 @@ def add_output(target: Target, recipe_outputs: List[RecipeOutput]):
         output_lines.append('&nbsp;')
         output_lines.append('')
 
+        if len(recipe_output.image_paths) > 0:
+            for image_rel_path in recipe_output.image_paths:
+                output_lines.append(os.path.split(image_rel_path)[1])
+                output_lines.append(f'![{image_rel_path}]({image_rel_path})')
+                output_lines.append('&nbsp;')
+                output_lines.append('')
+
     with open(get_file_name_for_target(target), 'w') as fh:
         fh.write('  \n'.join(output_lines))
 
@@ -81,13 +88,28 @@ def _contents_page_update():
         f''
     ]
 
+    done_targets = []  # type: List[Target]
     for previous_target in previous_targets:
-        hq = previous_target.highest_quality in [QUALITY.MEDIUM, QUALITY.HIGH]
-        lines.append(f' - [{"**" if hq else ""}'
-                     f'{previous_target.rel_path}'
-                     f'  -  Quality: {previous_target.highest_quality}'
-                     f'{"**" if hq else ""}]'
-                     f'({get_file_name_for_target(previous_target)})')
+        if previous_target not in done_targets:
+            lines += _get_target_link(previous_target)
+            done_targets.append(previous_target)
+            for child_target in previous_target.child_targets:
+                if child_target not in done_targets:
+                    lines += _get_target_link(child_target, True)
+                    done_targets.append(child_target)
 
     with open(CONTENTS_PAGE_FILENAME, 'w') as fh:
         fh.write('\n  '.join(lines))
+
+
+def _get_target_link(target: Target, indent: bool = False):
+    hq = target.highest_quality in [QUALITY.MEDIUM, QUALITY.HIGH]
+    return [f'{"    " if indent else ""}'
+            f' - '
+            f'[{"**" if hq else ""}'
+            f'{target.rel_path}'
+            f'  -  '
+            f'Quality: {target.highest_quality}'
+            f'{"**" if hq else ""}]'
+            f'({get_file_name_for_target(target)})']
+

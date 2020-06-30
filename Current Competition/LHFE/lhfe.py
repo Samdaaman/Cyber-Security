@@ -1,7 +1,7 @@
 import os
 from . import singletons, recipe_book
 from . import exceptions
-from .constants import NEW_DIR, CURRENT_DIR, SOLVED_DIR
+from .constants import NEW_DIR, CURRENT_DIR
 from . import incoming
 from .classes import Target
 from . import outgoing
@@ -14,7 +14,7 @@ def enumerate_target(target: Target):
 
 
 def _check():
-    paths = [NEW_DIR, CURRENT_DIR, SOLVED_DIR]
+    paths = [NEW_DIR, CURRENT_DIR]
     for path in paths:
         if not os.path.isdir(path):
             raise exceptions.PathMissingException(path)
@@ -30,7 +30,7 @@ def _process_targets():
 def _process_commands():
     # Blocks and holds for any command that is not refreshing
     while True:
-        command = input('Enter command (r=refresh, d=delete): ')
+        command = input('\nEnter command (r=refresh, d=delete): ')
         if command == 'r':
             break
         elif command == 'd':

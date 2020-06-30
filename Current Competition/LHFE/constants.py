@@ -1,6 +1,5 @@
 CURRENT_DIR = 'current'
 NEW_DIR = 'new'
-SOLVED_DIR = 'solved'
 GEN_PREFIX = 'lhfe_'
 GIT_KEEP = '.gitkeep'
 ALL_EXTENSION = '%ALL%'
