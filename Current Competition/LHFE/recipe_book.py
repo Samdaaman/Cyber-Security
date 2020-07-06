@@ -73,6 +73,16 @@ class StringsAllRecipe(Recipe):
         run_shell_command(self.name, recipe_output, True, command, 50)
         return recipe_output
 
+class ExiftoolRecipe(Recipe):
+    def __init__(self):
+        super(ExiftoolRecipe, self).__init__('Exiftool recipe', [ALL_EXTENSION])
+    
+    def run(self, target: Target) -> RecipeOutput:
+        command = f'exiftool {target.rel_path}'
+        recipe_output = RecipeOutput(self, command)
+        run_shell_command(self.name, recipe_output, True, command, 100)
+        return recipe_output
+
 
 # Image recipes
 class BinwalkRecipe(Recipe):
@@ -85,7 +95,7 @@ class BinwalkRecipe(Recipe):
         recipe_output = RecipeOutput(self, command)
         run_shell_command(self.name, recipe_output, False, command)
 
-        if len(os.listdir(out_path)) > 0:
+        if os.path.isdir(out_path) and len(os.listdir(out_path)) > 0:
             recipe_output.quality = QUALITY.MEDIUM
             nested_out_path = os.path.join(out_path, os.listdir(out_path)[0])
             files_to_move = os.listdir(nested_out_path)
@@ -93,9 +103,11 @@ class BinwalkRecipe(Recipe):
                 shutil.move(os.path.join(nested_out_path, file_to_move), os.path.join(out_path, file_to_move))
             os.rmdir(nested_out_path)
             enum_and_add_targets(out_path, parent_target=target)
-        else:
+        elif os.path.isdir(out_path):
             recipe_output.quality = QUALITY.LOW
             os.rmdir(out_path)
+        else:
+            recipe_output.quality = QUALITY.LOW
         return recipe_output
 
 
@@ -175,6 +187,7 @@ all_recipes = [
     HeadRecipe(),
     TailRecipe(),
     BinwalkRecipe(),
+    ExiftoolRecipe(),
     StegSolveRecipe(),
     StringsLongRecipe(),
     StringsAllRecipe()
