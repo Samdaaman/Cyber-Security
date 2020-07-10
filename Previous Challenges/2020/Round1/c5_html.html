@@ -1,0 +1,241 @@
+
+<!DOCTYPE html>
+<html lang="en">
+   <head>
+      <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+      <title>Cyber Security Challenge</title>
+      <meta charset="UTF-8">
+      <meta name="keywords" content="Cyber, Security, Challenge, Waikato, Competition, University, Server, Crow, Encryption, SQL, Injection, Drone, IT, Server, Side, Protection, Attack, Defend">
+      <meta name="description" content="The NZ Cyber Security Challenge is back! A huge competition involved around the idea of security on the internet. Jump in and register for your share of workshops, challenges, prizes and presentations.">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <link rel="icon" type="image/ico" href="../files/assets/favicon.ico">
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+      <link rel="stylesheet" media="screen and (min-width: 1000px)" href="../files/css/web.css">
+      <link rel="stylesheet" media="screen and (max-width: 1000px)" href="../files/css/phone.css">
+      <link href="../files/css/font.css" rel="stylesheet">
+      <script src="../files/scripts/javaScript.js"></script>
+   </head>
+   <body>
+      <div class="navbar">
+         <div class="navbar__logo">
+            <span class="navbar__logo__home">
+               <i class="fa fa-home" onclick="location.href='/'"></i>
+            </span>
+            <img class="navbar__logo__image" src="../files/assets/csc_watermark.png" alt="NZCSC-logo">
+         </div>
+         <div class="navbar__content">
+            <div class="mobile">
+               <select id="SELECT" onchange="selection();">
+                  <option value="0" selected="selected">HOME</option>
+                  <option value="1">CH1</option>
+                  <option value="2">CH2</option>
+                  <option value="3">CH3</option>
+                  <option value="4">CH4</option>
+                  <option value="5">CH5</option>
+                  <option value="6">CH6</option>
+                  <option value="7">CH7</option>
+                  <option value="8">CH8</option>
+                  <option value="9">CH9</option>
+                  <option value="10">CH10</option>
+                  <option value="11">CH11</option>
+                  <option value="12">CH12</option>
+               </select>
+            </div>
+            <div class="navbar-buttons">
+               <div class="navbar__button__container">
+                  <button type="button" onclick="window.open('/challenge1/','_blank')" class="navbar__button" id="CH1-BUTTON">Challenge 1</button>
+                  <button type="button" onclick="window.open('/challenge2/','_blank')" class="navbar__button" id="CH2-BUTTON">Challenge 2</button>               
+                  <button type="button" onclick="window.open('/challenge3/','_blank')" class="navbar__button" id="CH3-BUTTON">Challenge 3</button>
+               </div>
+               <div class="navbar__button__container">
+                  <button type="button" onclick="window.open('/challenge4/','_blank')" class="navbar__button" id="CH4-BUTTON">Challenge 4</button>
+                  <button type="button" onclick="window.open('/challenge5/','_blank')" class="navbar__button" id="CH5-BUTTON">Challenge 5</button>            
+                  <button type="button" onclick="window.open('/challenge6/','_blank')" class="navbar__button" id="CH6-BUTTON">Challenge 6</button>
+               </div>
+               <div class="navbar__button__container">
+                  <button type="button" onclick="window.open('/challenge7/','_blank')" class="navbar__button" id="CH7-BUTTON">Challenge 7</button>
+                  <button type="button" onclick="window.open('/challenge8/','_blank')" class="navbar__button" id="CH8-BUTTON">Challenge 8</button>
+                  <button type="button" onclick="window.open('/challenge9/','_blank')" class="navbar__button" id="CH9-BUTTON" disabled>           </button>
+               </div>
+               <div class="navbar__button__container">
+                  <button type="button" onclick="window.open('/challenge10/','_blank')" class="navbar__button" id="CH10-BUTTON">Challenge 10</button>
+                  <button type="button" onclick="window.open('/challenge11/','_blank')" class="navbar__button" id="CH11-BUTTON">Challenge 11</button>
+                  <button type="button" onclick="window.open('/challenge12/','_blank')" class="navbar__button" id="CH12-BUTTON">Challenge 12</button>
+               </div>
+            </div>
+         </div>
+      </div>
+      <div class="page__content">
+         <div class="page__content__logo">
+            <img src="../files/assets/themelogo.png" alt="themelogo">
+         </div>
+         <div class="page__content__container">
+            <div class="page__content__data">        
+
+<script>
+   const coefs = [ 0x43, 0x6f, 0x45, 0x66, 0x21 ];
+   	  state = [ 0x53, 0x65, 0x65, 0x64, 0xb0 ];
+   const bias  = 0x73;
+   function random()
+   {
+   		if (coefs.length != state.length)
+   				throw Error()
+   		var x0 = bias;
+   		for (var idx = 0; idx < state.length; idx++)
+   				x0 += coefs[idx]*state[idx];
+   		x0 %= 256;
+   		for (var idx = 0; idx < state.length - 1; idx++)
+   				state[idx] = state[idx+1];
+   		state[state.length-1] = x0;
+   	return x0;
+   };
+   
+   const char_table = [
+   		'Ć','Ĉ','Ċ','Č','Ď','Ĵ','ĵ','ķ','ĸ','Ĺ','Ļ','ļ','ɨ','ɩ','ɪ','ɫ',
+   		'Ŀ','ŀ','Ł','ł','Ţ','ţ','Ť','ť','Ŧ','ŧ','Ũ','ũ','Ɓ','ƃ','Ƅ','ƅ',
+   		' ','!','"','#','$','%','&','\'','(',')','*','+',',','-','.','/',
+   		'0','1','2','3','4','5','6','7','8','9',':',';','<','=','>','?',
+   		'@','A','B','C','D','E','F','G','H','I','J','K','L','M','N','O',
+   		'P','Q','R','S','T','U','V','W','X','Y','Z','[','\\',']','^','_',
+   		'`','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o',
+   		'p','q','r','s','t','u','v','w','x','y','z','{','|','}','~','ṣ',
+   		'¡','¢','£','¤','¥','¦','§','©','ª','«','¬','®','¯','°','±','²',
+   		'³','´','µ','¶','·','¸','¹','º','»','¼','½','¾','¿','À','Á','Â',
+   		'Ã','Ä','Å','Æ','Ç','È','É','Ê','Ë','Ì','Í','Î','Ï','Ð','Ñ','Ò',
+   		'Ó','Ô','Õ','Ö','×','Ø','Ù','Ú','Û','Ü','Ý','Þ','ß','à','á','â',
+   		'ã','ä','å','æ','ç','è','é','ê','ë','ì','í','î','ï','ð','ñ','ò',
+   		'ó','ô','õ','ö','÷','ø','ù','ú','û','ü','ý','þ','ÿ','ɯ','ɰ','ɱ',
+   		'ɲ','ɳ','ɴ','Ḱ','ḱ','Ḳ','ḳ','Ḵ','ḵ','Ḷ','ḷ','Ḹ','ḹ','Ḻ','ḻ','Ḽ',
+   		'ḽ','Ḿ','ḿ','Ṁ','ṁ','Ṃ','ṃ','Ṅ','ṅ','Ṇ','ṇ','Ṉ','ṉ','Ṋ','ṋ','Ṍ'
+   ];
+   
+   function encode(c) {
+   		return char_table[c];
+   }
+   
+   function decode(c){
+   		var idx=0;
+   		while(idx<256) {
+   				if (c==char_table[idx]) return idx;
+   				idx++;
+   		}
+   		throw Error();
+   }
+   
+   function $(s) {
+   		return document.getElementById(s); 
+   }
+   
+   function encrypt()
+   {
+   		$('error2').innerHTML = "";
+   		$('error1').innerHTML = "";
+   		var str = $('plaintext').value.split('').map(decode);
+   	var key = $('key').value.split('').map(decode); 
+   		var n   = str.length;
+   		if (key.length == 0)
+   		{
+   				$('error1').innerHTML = "Please provide a key, or click [Generate Key]!";
+   				return;
+   		}
+   		else if (key.length != str.length)
+   		{
+   				$('error2').innerHTML = "Key and plaintext length must match, try clicking [Generate Key] again!";
+   				return;
+   		}
+     
+   	var buff = [];
+   	var i = 0;
+   	for (var idx = 0; idx < n; idx++)
+   	{
+   		buff.push(str[idx] ^ key[idx])
+   	}
+   	$('ciphertext').value = buff.map(encode).join('');
+   
+   }
+   
+   function generate()
+   {
+   		$('error2').innerHTML = "";
+   		$('error1').innerHTML = "";
+   	var n   = $('plaintext').value.length;   
+   	var key = [];
+   	for (var idx = 0; idx < n; idx++)
+   	{
+   		key.push(random());
+   	}          
+   	$('key').value = key.map(encode).join('');
+   }
+   
+</script>
+<style>
+   table 
+   {
+   font-family: arial, sans-serif;
+   border-collapse: collapse;
+   width: 70%;
+   }
+   td, th 
+   {
+   border: 1px solid #dddddd;
+   text-align: left;
+   padding: 8px;
+   }
+   th
+   {
+   background-color: #dddddd;
+   }
+</style>
+</head>
+<body>
+   Plain text&ensp;&ensp;: &ensp; <input id="plaintext" type="text">
+   <br>
+   <br>
+   <br>
+   Key&emsp;&emsp;&ensp;&ensp;&ensp;: &ensp;<input id="key" type="text"> &ensp;<input type="button" value="Generate Key" onclick="generate()"> 
+   <br>
+   <br>
+   <br>
+   Cipher text&ensp;: &ensp;<input id="ciphertext" type="text"> &ensp;<input type="button" value="Encrypt" onclick="encrypt()">
+   <p id="error1" style="color:red"></p>
+   <p id="error2" style="color:red"></p>
+   <br>
+   <h1> Examples: </h1>
+   <table>
+      <tr>
+         <th> Plaintext  </th>
+         <th> Key                </th>
+         <th> Ciphertext </th>
+      </tr>
+      <tr>
+         <td> NZCSC'20 </td>
+         <td> LÆ¦cCḿZD </td>
+         <td> ĊṆé0Ćøht </td>
+      </tr>
+      <tr>
+         <td> Cyber Security </td>
+         <td> 4ù[R.ṇµÉòĿw%%& </td>
+         <td> wÒ97\ýäæÏeĴLQ_ </td>
+      </tr>
+      <tr>
+         <td> Cryptography </td>
+         <td> ṇZnĻƅªGEYÅèɳ</td>
+         <td> Ü(ťzkḴ 78õÐ» </td>
+      </tr>
+      <tr>
+         <td style="color:#008B8B;font-weight:bold" > [FLAG]   </td>
+         <td style="color:black;font-weight:bold"> [REDACTED]    </td>
+         <td> àĵjÈ4Ṍé¿§[ḾƃÂḸÇṈɩ                                    </td>
+      </tr>
+   </table>
+   <br><br><br>
+
+
+               
+            </div>
+         </div>
+      </div>
+   </body>
+</html>
+
+

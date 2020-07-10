@@ -1,0 +1,110 @@
+
+
+<html>
+<body>
+   <head>
+      <style>
+         body {
+         background-color: #2d303a;
+         color: #b3b3b5;
+         font-family: monospace;
+         }
+         .container {
+         width: 800px;
+         margin-top: 50px;
+         margin-right: auto;
+         margin-bottom: 0px;
+         margin-left: auto;
+         }
+         input[type=text] {
+         padding: 10px;
+         border-radius: 40px;
+         margin: 10px;
+         }
+         input[type=submit] {
+         margin:10px;
+         cursor:pointer;
+         }
+         #msg {
+         margin: 10px;
+         }
+      </style>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.0.0/crypto-js.min.js"></script>
+      <script>
+         function check_1(s){
+           if (CryptoJS.MD5(s.charAt(0)) == "8fa14cdd754f91cc6554c9e71929cce7"){
+             if (CryptoJS.MD5(s.charAt(1)) == "2db95e8e1a9267b7a1188556b2013b33"){
+               if (CryptoJS.MD5(s.charAt(2)) == "0cc175b9c0f1b6a831c399e269772661"){
+                 if (CryptoJS.MD5(s.charAt(3)) == "b2f5ff47436671b6e533d8dc3614845d"){
+                   if (CryptoJS.MD5(s.charAt(4)) == "853ae90f0351324bd73ea615e6487517"){
+                     return true;
+                   }
+                 }
+               }
+             }      
+           }
+           return false;
+         }
+         
+         function check_2(s){
+           if (CryptoJS.SHA1(s.charAt(0)) == "32096c2e0eff33d844ee6d675407ace18289357d"){
+             if (CryptoJS.SHA1(s.charAt(1)) == "b6589fc6ab0dc82cf12099d1c2d40ab994e8410c"){
+               if (CryptoJS.SHA1(s.charAt(2)) == "50c9e8d5fc98727b4bbc93cf5d64a68db647f04f"){
+                 if (CryptoJS.SHA1(s.charAt(3)) == "7a81af3e591ac713f81ea1efe93dcf36157d8376"){
+                   if (CryptoJS.SHA1(s.charAt(4)) == "b2c7c0caa10a0cca5ea7d69e54018ae0c0389dd6"){
+                     return true;
+                   }
+                 }
+               }
+             }      
+           }
+           return false;
+         }
+         
+         function check_3(s){
+           if (CryptoJS.SHA256(s.charAt(0)) == "4e07408562bedb8b60ce05c1decfe3ad16b72230967de01f640b7e4729b49fce"){
+             if (CryptoJS.SHA256(s.charAt(1)) == "6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b"){
+               if (CryptoJS.SHA256(s.charAt(2)) == "454349e422f05297191ead13e21d3db520e5abef52055e4964b82fb213f593a1"){
+                 if (CryptoJS.SHA256(s.charAt(3)) == "fcb5f40df9be6bae66c1d77a6c15968866a9e6cbd7314ca432b019d17392f6f4"){
+                   if (CryptoJS.SHA256(s.charAt(4)) == "de5a6f78116eca62d7fc5ce159d23ae6b889b365a1739ad2cf36f925a140d0cc"){
+                     return true;
+                   }
+                 }
+               }
+             }      
+           }
+           return false;
+         }
+         
+         function check_4(s){
+           if (CryptoJS.HmacMD5(s.charAt(0), "purple porcupine") == "01969a94bcf90f8aad4c3afefc7bc046") {
+             if (CryptoJS.HmacMD5(s.charAt(1), "purple porcupine") == "f832cb995a8ecd24789c022d4c93913b") {
+               return true; 
+             }       
+           }
+           return false;
+         }
+         function check_flag(){
+                 var input = document.getElementById('flag').value;
+                 var l = input.match(/.{1,5}/g);
+                 if (check_1(l[0]) && check_2(l[1]) && check_3(l[2]) && check_4(l[3])){
+                         document.getElementById("msg").textContent = "Success! You've got the right flag!";
+                 }
+                 else {
+                         document.getElementById("msg").textContent = "Sorry, that's the wrong flag :(";
+                 }
+                 document.getElementById("flag").value = "";
+         }
+      </script>
+   </head>
+   <div class="container">
+      <h1>Welcome to the Flag Checker</h1>
+      <input type="text" id="flag" name="input" placeholder="Please enter the flag to check..."><br>
+      <input type="submit" value="submit" onclick="return check_flag();" /><br>
+      <span id="msg"></span>
+   </div>
+</body>
+</html>
+
+
+
