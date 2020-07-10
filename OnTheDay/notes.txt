@@ -1,0 +1,3 @@
+- find suid binaries: find / -perm -u=s -type f 2>/dev/null
+- see what we can sudo: sudo -l
+- Add to sudoers:  echo "username ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
