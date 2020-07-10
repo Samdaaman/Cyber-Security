@@ -31,6 +31,7 @@ def get_common_strings_of_length(str_length, file_contents):
     freq_2d_list.sort(key=lambda pair: pair[0])
     freq_2d_list.reverse()
 
+    print(len(freq_2d_list))
     print("{}".format(freq_2d_list))
 
     for top_item_index in range(number_top_items):
