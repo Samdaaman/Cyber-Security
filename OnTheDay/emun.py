@@ -2,7 +2,7 @@ import requests as reqs
 import urllib3.exceptions
 
 XSS_KEY = 'abcd'
-usernames = ['Fromage']
+usernames = ['Fromage', 'Samdaman']
 
 
 class Attack:
@@ -15,6 +15,7 @@ class Attack:
 def main():
     attacks = [SqlAttack1(), XSSAttack1()]
     for un in usernames:
+        print('\n------------------------------')
         [check_up(un, i) for i in [True, False]]
         for attack in attacks:
             try:
