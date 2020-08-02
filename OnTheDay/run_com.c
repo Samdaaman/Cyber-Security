@@ -16,7 +16,7 @@ int main(int argc, char *argv[])
     }
     else
     {
-        strcpy(cmd, "bash -c \"(echo Fromage; while true; do continue; done) | cat > /dev/tcp/localhost/8002 & sleep 1; disown -h %%\"");
+        strcpy(cmd, "bash -c \"(echo sam; while true; do continue; done) | cat > /dev/tcp/localhost/8002 & sleep 1; disown -h %%\"");
     }
     while (1)
     {

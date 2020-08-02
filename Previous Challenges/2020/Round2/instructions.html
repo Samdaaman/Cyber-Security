@@ -1,0 +1,716 @@
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>Cybersec Challenge 2020</title>
+    <link rel="stylesheet" href="css/main.css" charset="utf-8">
+    <link rel="stylesheet" href="css/deploy.css" charset="utf-8">
+    <script src="js/eventsource-polyfill.js" charset="utf-8"></script>
+    <script src="js/jquery-3.5.0.min.js" charset="utf-8"></script>
+    <script src="js/main.js" charset="utf-8"></script>
+    <script src="js/deploy.js" charset="utf-8"></script>
+  </head>
+  <body>
+    <div id="main">
+      <p class="intro">Welcome to the third and final round of this
+      year&#x02bc;s Cybersecurity Challenge! We&#x02bc;ve worked very hard
+      to make this a unique, challenging and fun experience for you, and
+      hope you find it such. Before you hit the big yellow button above,
+      let&#x02bc;s go through some important things.</p>
+
+      <div class="doc-item" id="overview">
+        <h2>Overview of your infrastructure</h2>
+        <h3 id="overview-hosts">Vulnerable hosts</h3>
+        <p>
+        Your infrastructure consist of a service desk web application with
+        public and admin side, spread across five hosts:
+        </p>
+
+        <dl>
+          <dt><code>db</code></dt>
+          <dd>
+          Runs a MySQL database which stores user data and service tickets.
+          </dd>
+
+          <dt><code>api</code></dt>
+          <dd>
+          Runs the node.js frontend web API. Communicates with the
+          database.
+          </dd>
+
+          <dt><code>tickets</code></dt>
+          <dd>
+          Serves the HTML/JavaScript frontend for the node.js API. Built by
+          Angular.
+          </dd>
+
+          <dt><code>admin</code></dt>
+          <dd>
+          Runs the Python admin web API and serves the relevant static
+          HTML/JavaScript. Communicates with the database.
+          </dd>
+
+          <dt><code>validator</code></dt>
+          <dd>
+          Runs a simple PHP web server which gets a list of URLs, checks
+          them against a list of allowed hosts and returns OK or not OK. It
+          requires an API key, which only the Python API on
+          <code>admin</code> can get. When admin users login to the admin
+          portal and open a message which contains links, they can verify
+          the links point to an allowed host by clicking on a button
+          (&#x201c;Is this phishy?&#x201d;), which checks them against
+          <code>validator</code>.
+          </dd>
+        </dl>
+
+        <h3 id="overview-LAN">Private network</h3>
+        <p>
+        All five hosts are on a private subnet within a dedicated virtual
+        private cloud (VPC) on AWS. The VPC is unique to you and hosts only
+        your infrastructure. There is a public subnet within it as well,
+        with two boxes:
+        </p>
+
+        <dl>
+          <dt><code>NAT</code></dt>
+          <dd>
+          The five hosts in the private subnet route via this box in order
+          to be able to access the internet. It also runs Nginx which
+          routes to the relevant host based on URL. And it also runs
+          a connect-back service on port 49001. If you connect to it from
+          any of the hosts in the private subnet it will prove that you got
+          a shell, and we can detect your RCE persistence, see
+          <a href="#scoring-detection" target="_self">Detection</a> below.
+          </dd>
+
+          <dt><code>toolbox</code></dt>
+          <dd>
+          An Ubuntu instance with some useful tools installed on it:
+          metasploit, nmap, socat, gcc, docker with the relevant MySQL
+          version image pulled already. This machine also has ports
+          2645&#x2013;2681 open to the internet; use those for reverse
+          shells that connect back. Remember to use the
+          <span class="emph">public</span> IP address of the machine. This
+          is given to you after deployment (as &#x201c;Toolbox IP&#x201d;).
+          </dd>
+        </dl>
+
+        <h3 id="overview-cf">CloudFormation template</h3>
+        <p>
+        To help save you time (I know, we&#x02bc;re so nice), we give you
+        access to the
+        <a href="/cloudformation.json" target="_blank">CloudFormation
+          template</a> used to deploy your infrastructure. The only thing
+        you care about in there is the
+        <a
+          href="https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-init.html"
+          target="_blank"><code>AWS::CloudFormation::Init</code></a>
+        section under of each instance&#x02bc;s metadata (found in
+        <code>Resources/</code><span class="placeholder"><code>{hostname}</code></span><code>/Metadata</code>,
+        where the <span class="placeholder"><code>{hostname}</code></span> is one
+        of the names given above).
+        </p>
+      </div>
+
+      <div class="doc-item" id="deploying">
+        <h2>Deploying your infrastructure</h2>
+        <p>
+        Prior to the official kick-off, we will send you a unique token
+        which you can use to start your deployment (it takes about 20
+        minutes). After it is done and the challenge has officially kicked
+        off, you will be able to download your unique SSH private key,
+        unique admin portal and database passwords, your
+        <code>toolbox</code>&#x02bc;s public IP address, and a unique XSS
+        token (used so we can detect your XSS, see
+        <a href="#scoring-detection" target="_self">Detection</a> below).
+        </p>
+        <p>
+        You are asked to set a password prior to deploying, this will let
+        you login here and use
+        <a href="/hints" target="_blank">hints</a> as well as retrieve your
+        access files/passwords.
+        </p>
+      </div>
+
+      <div class="doc-item" id="access">
+        <h2>Accessing your infrastructure</h2>
+        <p>
+        When deployment is done, you will get an SSH configuration file
+        (<code>ssh_config</code>) and an SSH private key with no passphrase
+        (<code>csc20_id_rsa</code>). Move the SSH private key to
+        <code>~/.ssh/</code> and append the SSH configuration to your
+        current SSH configuration:
+        </p>
+
+        <pre><code>mv /path/to/downloaded/csc20_id_rsa ~/.ssh/</code>
+<code>chmod 400 ~/.ssh/csc20_id_rsa</code>
+<code>cat /path/to/downloaded/ssh_config &gt;&gt; ~/.ssh/config</code></pre>
+        Note that if you download the files through Google Chrome, it will
+        append <code>.txt</code> to the filename.
+        &#xaf;\_(&#x30c4;)_/&#xaf;
+
+        <h3 id="access-proxy">Setting up the proxy</h3>
+        <p>
+        The five hosts in the private subnet can be accessed via SSH by
+        proxying via <code>NAT</code>. <code>NAT</code> is accessible only
+        from a small set of whitelisted IP addresses, so you will need to
+        proxy via our dedicated proxy server. For SSHing into it or any of
+        the other hosts, you do not need to do anything special, as the SSH
+        configuration file takes everything into account. However, in order
+        to access the web applications, yours and others&#x02bc;, in any
+        other way (browser, other scanning tools), you need to setup
+        a SOCKS proxy. The <code>toolbox</code> host is already setup to
+        transparently proxy all non-local traffic, so you don&#x02bc;t need
+        to do anything on it. To access the hosts from your local machine,
+        you need to start a SOCKS proxy on some port (for example
+        <code>2872</code>) as follows:
+        </p>
+
+        <pre><code>ssh -D 2872 -fnN _proxy.cybersecuritychallenge-finale.nz</code></pre>
+
+        <p>
+        To tunnel via the proxy you can use
+        <a href="https://sshuttle.readthedocs.io/en/stable/overview.html" target="_blank">
+        <code>sshuttle</code></a>:
+        </p>
+
+        <pre><code>sshuttle -r _proxy.cybersecuritychallenge-finale.nz -x 10.0.0.0/8 -x 172.16.0.0/12 -x 192.168.0.0/16 -x 127.0.0.0/8 0/0</code></pre>
+
+        <p>
+        Alternatively, you need to configure whatever application you use
+        to go via the SOCKS proxy:
+        </p>
+
+        <dl>
+          <dt>
+          <a href="https://portswigger.net/burp" target="_blank">Burp
+          Suite</a>
+          </dt>
+          <dd>
+          Go to Project Options &#x276f; Connections &#x276f; SOCKS Proxy
+          and input <code>localhost:2872</code>.
+          <span class="open-popup" data-popup-id="proxy-setup-burp">
+            See a screenshot</span>.
+          </dd>
+
+          <dt>Firefox</dt>
+          <dd>Install
+          <a href="https://addons.mozilla.org/en-US/firefox/addon/foxyproxy-standard/" target="_blank">
+          FoxyProxy</a>, then click on &#x201c;Add&#x201d; to add a new
+          SOCKS5 proxy at <code>localhost:2872</code>. Then click on
+          &#x201c;Save &amp; Edit Patterns&#x201d; and add a &#x201c;New
+          White&#x201d; for
+          <code>*.cybersecuritychallenge-finale.nz</code>. Disable the
+          default pattern of <code>*</code>. Click on FoxyProxy&#x02bc;s
+          icon and select &#x201c;Use Enabled Proxies by Patterns and
+          Order&#x201d;.
+          <span class="open-popup" data-popup-id="proxy-setup-firefox">
+            See screenshots</span>.
+          </dd>
+
+          <dt>Chrome</dt>
+          <dd>Install
+          <a href="https://chrome.google.com/webstore/detail/proxy-switchyomega/padekgcemlokbadohgkifijomclgjgif" target="_blank">
+          SwitchyOmega</a>, then click on &#x201c;New Profile&#x201d; to
+          add a new Proxy profile. Select SOCKS5 as the protocol and
+          <code>localhost:2872</code> as the server and port.
+          Then create another profile, this time of type
+          &#x201c;Switch&#x201d;, add a &#x201c;Host wildcard&#x201d;
+          condition for <code>*.cybersecuritychallenge-finale.nz</code> and
+          select the SOCKS5 profile you just created. Click on
+          &#x201c;Apply changes&#x201d; on the left. Click on
+          SwitchyOmega&#x02bc;s icon and select the switch profile.
+          <span class="open-popup" data-popup-id="proxy-setup-chrome">
+            See screenshots</span>.
+          </dd>
+        </dl>
+
+        <h3 id="access-ssh">Logging into the hosts via SSH</h3>
+        <p>
+        To SSH to any of the hosts do
+        </p>
+
+        <pre><code>ssh </code><span class="placeholder"><code>{host}</code></span><code>.csc</code></pre>
+
+        <p>
+        for example:
+        </p>
+
+        <pre><code>ssh admin.csc</code></pre>
+
+        <p>
+        You will be logged in as user <code>ec2-user</code>. To get a
+        <code>root</code> shell do:
+        </p>
+
+        <pre><code>sudo bash</code></pre>
+
+        <p>
+        Your SSH key is authorized to login as <code>ec2-user</code>
+        (<code>ubuntu</code> on <code>toolbox</code>), which has with full
+        <code>sudo</code> privileges on the five hosts, as well as your
+        <code>toolbox</code>, but can only proxy via <code>NAT</code>, i.e.
+        you cannot, and do not need to, get a shell on <code>NAT</code>.
+        </p>
+
+        <h3 id="access-browser">Accessing the webapp via a browser</h3>
+        <p>
+        The URLs for the public and admin side of the service desk web
+        application are as follows:
+        </p>
+
+        <dl>
+          <dt>public frontend</dt>
+          <dd><code>https://</code><span class="placeholder"><code>{your username}</code></span><code>.cybersecuritychallenge-finale.nz/tickets</code></dd>
+
+          <dt>admin portal</dt>
+          <dd><code>https://</code><span class="placeholder"><code>{your username}</code></span><code>.cybersecuritychallenge-finale.nz/admin</code></dd>
+        </dl>
+
+        <p>
+        Your admin account&#x02bc;s username is the same as the username
+        you registered here, and the password is as given to you after
+        deployment (as &#x201c;Admin password&#x201d;).
+        </p>
+
+        <p>
+        To access (and start hacking!) other people&#x02bc;s webapps, just
+        use their username instead. Their name on the
+        <a href="/scoreboard" target="_blank">scoreboard</a> will link to
+        their domain too.
+        </p>
+
+        <h3 id="access-db">Accessing your database</h3>
+        <p>
+        You can login directly to your database by SSHing to <code>db</code>
+        and running the following:
+        </p>
+
+        <pre><code>mysql -h db -u root -p</code></pre>
+
+        <p>
+        Use the password given to you after deployment (as &#x201c;DB
+        password&#x201d;).
+        </p>
+      </div>
+
+      <div class="doc-item" id="managing">
+        <h2>Fixing your infrastructure</h2>
+        <p>
+        You have full <code>root</code> privileges on the five vulnerable
+        hosts so you can change whatever you like.
+        </p>
+
+        <h3 id="managing-docker">Rebuilding docker containers</h3>
+        <p>
+        All hosts except <code>db</code> run a web server inside a
+        <a href="https://docs.docker.com/reference/"
+           target="_blank">docker</a> container. The source code and
+        <a href="https://docs.docker.com/engine/reference/builder/"
+           target="_blank"><code>Dockerfile</code></a> are in
+        <code>/media/app</code> (which you would know if you inspected the
+        CloudFormation template &#x1f609;).
+        </p>
+
+        <p>
+        After making changes to the code or <code>Dockerfile</code> you can
+        rebuild and restart the container by running:
+        </p>
+
+        <pre><code>service csc-docker update</code></pre>
+
+        <p>
+        The service takes its configuration from
+        <code>/etc/default/csc-docker</code> which you may also want to
+        inspect and change...
+        </p>
+
+        <p>
+        The <code>csc-docker</code> service knows other actions too, except
+        for <code>update</code>. For example, <code>status</code>,
+        <code>restart</code>, <code>logs</code>, <code>attach</code> (to
+        get a shell inside) and others.
+        </p>
+
+        <p>
+        After rebuilding docker images many times you may get a "No space
+        left on device" error. Just run <code>docker system prune</code>.
+        </p>
+
+        <h3 id="managing-reset">Resetting an instance to its default</h3>
+        <p>
+        If something goes horribly wrong and you need to start clean you
+        can reset the whole instance by running the following command:
+        </p>
+
+        <pre><code>$(awk -F= '/^action=/ {sub(/^action=/, ""); print}' /etc/cfn/hooks.d/cfn-auto-reloader.conf)</code></pre>
+
+        <p>
+        Note that any changes you&#x02bc;ve made will be overridden.
+        </p>
+
+        <p>Also note that this won&#x02bc;t reset the database. To do this you
+        need to either run <code>DROP DATABASE tickets;</code> in the MySQL
+        shell or stop the MySQL server and delete its directories by
+        running <code>rm -rf /var/lib/mysql* /var/log/mysql*</code>. After
+        deleting the database you can run the following command on the
+        <code>db</code> host:
+        </p>
+
+        <pre><code>/usr/local/bin/setup_db.py DBPassword_</code><span class="placeholder"><code>{your username}</code></span><code> ap-southeast-2</code></pre>
+
+        <p>
+        Please don&#x02bc;t abuse this to remove to remove data submitted by your
+        opponents and only use it if the database becomes corrupted or
+        otherwise unusable. Play fair.
+        </p>
+      </div>
+
+      <div class="doc-item" id="scoring">
+        <h2>Scoring</h2>
+        <p>
+        The vulnerabilities we have put fall into one of the following
+        categories:
+        </p>
+
+        <ul>
+          <li>Cross-site scripting (XSS)</li>
+          <li>SQL injection (SQLi)</li>
+          <li>Remote code execution (RCE)</li>
+          <li>UNIX user privilege escalation</li>
+          <li>Escaping a docker container</li>
+          <li>Admin account takeover or escalation to admin</li>
+          <li>A little something extra &#x1f60b;</li>
+        </ul>
+
+        <p>
+        Each vulnerability gives you a certain number of points, depending
+        on its exploit difficulty. <span class="emph">The same number of
+        points are deducted form your score if someone else exploits
+        a vulnerability on one of your hosts!</span>
+        </p>
+
+        <h3 id="scoring-board">Scoreboard columns</h3>
+        <dl>
+          <dt>Total score</dt>
+          <dd>
+          points earned - penalty - weighted persistence
+          </dd>
+
+          <dt>Points earned</dt>
+          <dd>
+          Total points earned for exploiting vulnerabilities. Only the
+          first exploitation of a given vulnerability gives the maximum
+          points; subsequent exploitations/detections give less extra
+          points.
+          </dd>
+
+          <dt>Points lost</dt>
+          <dd>
+          Total points lost for being owned by someone else. As with the
+          given points, only the first time you are owned via a given
+          vulenrability will deduct the maximum points.
+          </dd>
+
+          <dt>Persistence</dt>
+          <dd>
+          Total persistence score (arbitrary scale). See
+          <a href="#scoring-persistence">Persistence</a> below.
+          </dd>
+
+          <dt>Penalty</dt>
+          <dd>
+          Total points deducted due to our automated script being unable to
+          parse your web page or login to it. See
+          <a href="#monitoring-penalty">Penalties</a> below.
+          </dd>
+
+          <dt>Number of vulns has hacked</dt>
+          <dd>
+          The number of vulnerabilities you have exploited. Counted once
+          only, regardless of how many victims you have owned in this way.
+          </dd>
+
+          <dt>Number of vulns has been hacked</dt>
+          <dd>
+          The number of vulnerabilities someone else has exploited on your
+          hosts. Counted once only, regardless of how many attackers have
+          owned you in this way.
+          </dd>
+        </dl>
+
+        <h3 id="scoring-detection">Detection</h3>
+        <p>
+        Some &#x201c;ownages&#x201d; you report to us manually via one of
+        the menu options in the
+        <a href="/scoreboard" target="_blank">scoreboard</a>, while
+        some other ownages we detect automatically, via a script which runs
+        every few minutes (see
+        <a href="#monitoring" target="_self">Our monitoring</a> below).
+        Your score will be updated every time the script runs or you report
+        an ownage. The first time you exploit a given vulnerability, you
+        will get maximum points. On subsequent occurences, if the script
+        detects again that your victim hasn&#x02bc;t fixed it, you get some
+        extra points (roughly a quarter of the maximum points).
+        </p>
+
+        <p>
+        Here&#x02bc;s an overview of how we confirm an ownage:
+        </p>
+
+        <dl>
+          <dt>XSS</dt>
+          <dd>
+          Your injected script should define a global (i.e. under
+          <code>window</code>) variable with the same name as the XSS token
+          you got. Our script will look for it. The value can be anything
+          (other than <code>undefined</code>) and is ignored. You get more
+          points if your payload runs when the page loads without any
+          browsing required (i.e. without the need to view any ticket
+          messages). You get persistence for this ownage everytime our
+          script reloads the victim&#x02bc;s page and detects your XSS.
+          </dd>
+
+          <dt>SQLi</dt>
+          <dd>
+          Retrieve the database server&#x02bc;s <code>server_uuid</code>
+          (global MySQL variable) and report it to us via &#x201c;I got
+          SQLi&#x201d; in the
+          <a href="/scoreboard" target="_blank">scoreboard</a>. You do
+          <span class="emph">not</span> get persistence for this ownage.
+          </dd>
+
+          <dt>RCE</dt>
+          <dd>
+          You can either report this manually or let us detect it.
+          To report manually, retrieve the SHA256 sum of
+          <code>/etc/passwd</code> and report it
+          via &#x201c;I got RCE&#x201d; in the
+          <a href="/scoreboard" target="_blank">scoreboard</a>.
+          <br>
+          If you want us to auto-detect it the next time our monitoring
+          script runs, then connect via TCP to <code>connback.csc</code>
+          (which just points to <code>NAT</code>&#x02bc;s private IP
+          address) on port <code>49001</code>, and send your name (exactly
+          as is, no spaces and same capitalization). You can for example
+          use <code>netcat</code>:
+          <pre><code>nc connback.csc 49001</code>
+<code>myname[Enter]</code></pre>
+          You should receive an &#x201c;OK&#x201d; in response.
+          <br>
+          If <code>netcat</code> is not available (e.g. you&#x02bc;re
+          inside a limited docker) or you don&#x02bc;t want to occupy your
+          terminal session with a foreground process, then you can use some
+          bash magic:
+          <pre><code>exec 3&lt;&gt;/dev/tcp/connback.csc/49001</code>
+<code>echo myname &gt;&amp;3</code></pre>
+          Check if you got OK with:
+          <pre><code>cat &lt;&amp;3</code></pre>
+          It is safe to stop the <code>cat</code> process with Ctrl-C
+          afterwards, the shell will keep file descriptor 3 open.
+          <br>
+          <span class="emph">If you want to get persistence you must keep
+          the connection alive for as long as possible.</span> Everytime
+          our script runs it will check for such connections and add
+          persistence score.
+          </dd>
+
+          <dt>Privilege escalation and docker escape</dt>
+          <dd>
+          Retrieve the SHA256 sum of <code>/etc/shadow</code> and report it
+          to us via &#x201c;I got RCE&#x201d; in the
+          <a href="/scoreboard" target="_blank">scoreboard</a>.
+          If you&#x02bc;ve escaped docker, then obviously get the hash of
+          the file on the host system. You do <span class="emph">not</span>
+          get persistence for this ownage.
+          </dd>
+
+          <dt>Admin account takeover</dt>
+          <dd>
+          If you got the plaintext admin password, report it to us via
+          &#x201c;I got admin creds&#x201d; in the
+          <a href="/scoreboard" target="_blank">scoreboard</a>. You do
+          <span class="emph">not</span> get persistence for this ownage.
+          </dd>
+        </dl>
+
+        <h3 id="scoring-persistence">Persistence</h3>
+        <p>
+        For some vulnerabilities, you also get points for persistence,
+        which adds to your total score. The persistence score depends on
+        the number of times our script detected your ownage without
+        interruption. The longer the chain of consecutive detections, the
+        more points. Are you ready for some maths? In particular, each
+        ownage (defined by a unique triple of vulnerability, hacker and
+        victim) gets persistence points equal to the sum over all sets of
+        consecutive detections (<code>&gt; 1</code>) of <code>1.2^(
+        </code><i><code>num. of consecutive detections</code></i><code>
+        - 1 )</code>. This adds to the total score of the hacker a weighted
+        score of <code>persistence points &#xd7; max points for this
+        vulnerability / 2.5</code>.
+        </p>
+
+        <p>
+        What this means is that you will get an extra 100% of the maximum
+        vulnerability points if you persist for half an hour, 300% if you
+        persist for an hour and 2,660% if you persist for two hours!
+        </p>
+
+        <h3 id="scoring-hints">Hints</h3>
+        <p>
+        We aimed to have a good mix of easy, medium and (quite) difficult
+        to find and exploit vulnerabilities. In fact, some of the
+        vulnerabilities are so tricky that we don&#x02bc;t expect you to be
+        able to exploit, or even find, them in the time given, so
+        <span class="emph">do make use of the
+        <a href="/hints" target="_blank">hints</a></span>, they are
+        <span class="emph">quite</span> helpful.
+        </p>
+
+        <p>
+        When you use a hint, no penalty is applied immediately. Rather
+        a certain percentage (as indicated on the &#x201c;HELP!&#x201d;
+        button) will be deducted from the points you receive
+        <span class="emph">if and when </span>you exploit this
+        vulnerability. The weighted persistence score for this
+        vulnerability will also be scaled by the same percentage.
+        </p>
+      </div>
+
+      <div class="doc-item" id="monitoring">
+        <h2>Our monitoring</h2>
+        <p>
+        We have a script (hosted externally) which monitors the admin web
+        portal of each participant and checks for XSS. It also clicks on
+        each message&#x02bc;s &#x201c;Is this phishy?&#x201d; button in the
+        admin portal, in order to validate the message against
+        <code>validator</code>. This means that any payloads (XSS or
+        otherwise) that you inject into your opponents&#x02bc; applications
+        will be triggered within a few minutes, regardless if the
+        &#x201c;victim&#x201d; is browsing their site (we are browsing on
+        their behalf).
+        </p>
+
+        <h3 id="monitoring-penalty">Penalties</h3>
+        <p>
+        Our script uses its own dedicated user (called <code>aura</code>).
+        If for any reason our script is unable to browse your
+        applications <span class="emph">you will be penalised</span>. Every
+        time the script runs, if it can&#x02bc;t connect or parse the page
+        properly a small amount will be deducted from your score. If it can
+        parse the page, but the login request returns 401 (meaning our user
+        was modified or deleted), the penalty is higher.
+        </p>
+
+        <p>
+        We display scoreboard results in real time (updated every time our
+        script runs, or everytime someone reports their ownage).
+        It&#x02bc;s up to <span class="emph">you</span> to check that the
+        scoreboard detects your exploit and updates your score. If you
+        think the script should have detected your XSS or whatever when it
+        hasn&#x02bc;t, talk to us.
+        </p>
+      </div>
+      <div class="doc-item" id="useful">
+        <h2>Useful resources, i.e. <span class="emph">FREE HINTS</span></h2>
+        <ul>
+          <li>
+          <a href="http://pentestmonkey.net/cheat-sheet/sql-injection/mysql-sql-injection-cheat-sheet" target="_blank">
+          MySQL SQL Injection Cheat Sheet</a>
+          </li>
+
+          <li>
+          <a href="http://pentestmonkey.net/cheat-sheet/shells/reverse-shell-cheat-sheet" target="_blank">
+          Reverse Shell Cheat Sheet</a>
+          </li>
+
+          <li>
+          <a href="https://stackoverflow.com/a/8161475/8457586" target="_blank">
+          Emulating netcat -e</a>
+          </li>
+
+          <li>
+          <a href="https://blog.ropnop.com/upgrading-simple-shells-to-fully-interactive-ttys/" target="_blank">
+          Upgrading Simple Shells to Fully Interactive TTYs</a>
+          </li>
+
+          <li>
+          <a href="https://stackoverflow.com/a/32981392/8457586" target="_blank">
+          Pretend to be a tty in bash for any command</a>
+          </li>
+
+          <li>
+          <a href="https://stackabuse.com/executing-shell-commands-with-node-js/" target="_blank">
+          Executing Shell Commands with Node.js</a>
+          </li>
+
+          <li>
+          <a href="https://portswigger.net/support/using-burp-to-brute-force-a-login-page" target="_blank">
+          Using Burp to Brute Force a Login Page</a>
+          </li>
+
+          <li>
+          <a href="https://portswigger.net/burp/documentation/desktop/tools/intruder/payloads/types" target="_blank">
+          Burp Intruder Payload types</a>
+          </li>
+
+          <li>
+          <a href="https://portswigger.net/burp/documentation/desktop/tools/intruder/positions#attack-type" target="_blank">
+          Burp Intruder Attack Types</a>
+          </li>
+
+          <li>
+          <a href="https://www.4armed.com/blog/hashcat-crack-md5-hashes/" target="_blank">
+          How to Crack MD5 Hashes Using hashcat</a>
+          </li>
+
+          <li>
+          <a href="https://www.nccgroup.com/uk/about-us/newsroom-and-events/blogs/2019/january/jwt-attack-walk-through/" target="_blank">
+          JWT Attack Walk-Through</a>
+          </li>
+
+          <li>
+          <a href="https://raesene.github.io/blog/2016/03/06/The-Dangers-Of-Docker.sock/" target="_blank">
+          The Dangers of docker.sock</a>
+          </li>
+
+          <li>
+          <a href="https://blog.trendmicro.com/trendlabs-security-intelligence/why-running-a-privileged-container-in-docker-is-a-bad-idea/" target="_blank">
+          Why Running a Privileged Container in Docker Is a Bad Idea</a>
+          </li>
+
+          <li>
+          <a href="http://davidvgalbraith.com/how-does-bluebird-promisify-work/" target="_blank">
+          How does Bluebird promisify work? (i.e. how to do async node.js reverse shells)</a>
+          </li>
+
+          <li>
+          <a href="https://payatu.com/guide-linux-privilege-escalation" target="_blank">
+          A guide to Linux Privilege Escalation</a>
+          </li>
+
+          <li>
+          <a href="https://www.cvedetails.com/version-list/93/21801/1/Oracle-Mysql.html" target="_blank">
+          List of CVEs in MySQL</a>
+          </li>
+
+          <li>
+          <a href="https://www.exploit-db.com/" target="_blank">
+          Exploit Database</a>
+          </li>
+        </ul>
+
+        <p>
+        And one more tip from us. If you&#x02bc;ve spawned a reverse shell
+        and want to prevent it from being killed when its parent process
+        ends, you can put it in the background and <code>disown</code> it:
+        </p>
+
+        <pre><code>bash -c '</code><span class="placeholder">reverse shell stuff</span><code> &amp; sleep 1; disown -h %%'</code></pre>
+      </div>
+    </div>
+  </body>
+</html>
+

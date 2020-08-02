@@ -1,0 +1,201 @@
+Download your access files
+Welcome to the third and final round of this yearʼs Cybersecurity Challenge! Weʼve worked very hard to make this a unique, challenging and fun experience for you, and hope you find it such. Before you hit the big yellow button above, letʼs go through some important things.
+
+Overview of your infrastructure
+Vulnerable hosts
+Your infrastructure consist of a service desk web application with public and admin side, spread across five hosts:
+
+db
+Runs a MySQL database which stores user data and service tickets.
+api
+Runs the node.js frontend web API. Communicates with the database.
+tickets
+Serves the HTML/JavaScript frontend for the node.js API. Built by Angular.
+admin
+Runs the Python admin web API and serves the relevant static HTML/JavaScript. Communicates with the database.
+validator
+Runs a simple PHP web server which gets a list of URLs, checks them against a list of allowed hosts and returns OK or not OK. It requires an API key, which only the Python API on admin can get. When admin users login to the admin portal and open a message which contains links, they can verify the links point to an allowed host by clicking on a button (“Is this phishy?”), which checks them against validator.
+Private network
+All five hosts are on a private subnet within a dedicated virtual private cloud (VPC) on AWS. The VPC is unique to you and hosts only your infrastructure. There is a public subnet within it as well, with two boxes:
+
+NAT
+The five hosts in the private subnet route via this box in order to be able to access the internet. It also runs Nginx which routes to the relevant host based on URL. And it also runs a connect-back service on port 49001. If you connect to it from any of the hosts in the private subnet it will prove that you got a shell, and we can detect your RCE persistence, see Detection below.
+toolbox
+An Ubuntu instance with some useful tools installed on it: metasploit, nmap, socat, gcc, docker with the relevant MySQL version image pulled already. This machine also has ports 2645–2681 open to the internet; use those for reverse shells that connect back. Remember to use the public IP address of the machine. This is given to you after deployment (as “Toolbox IP”).
+CloudFormation template
+To help save you time (I know, weʼre so nice), we give you access to the CloudFormation template used to deploy your infrastructure. The only thing you care about in there is the AWS::CloudFormation::Init section under of each instanceʼs metadata (found in Resources/{hostname}/Metadata, where the {hostname} is one of the names given above).
+
+Deploying your infrastructure
+Prior to the official kick-off, we will send you a unique token which you can use to start your deployment (it takes about 20 minutes). After it is done and the challenge has officially kicked off, you will be able to download your unique SSH private key, unique admin portal and database passwords, your toolboxʼs public IP address, and a unique XSS token (used so we can detect your XSS, see Detection below).
+
+You are asked to set a password prior to deploying, this will let you login here and use hints as well as retrieve your access files/passwords.
+
+Accessing your infrastructure
+When deployment is done, you will get an SSH configuration file (ssh_config) and an SSH private key with no passphrase (csc20_id_rsa). Move the SSH private key to ~/.ssh/ and append the SSH configuration to your current SSH configuration:
+
+mv /path/to/downloaded/csc20_id_rsa ~/.ssh/
+chmod 400 ~/.ssh/csc20_id_rsa
+cat /path/to/downloaded/ssh_config >> ~/.ssh/config
+Note that if you download the files through Google Chrome, it will append .txt to the filename. ¯\_(ツ)_/¯
+Setting up the proxy
+The five hosts in the private subnet can be accessed via SSH by proxying via NAT. NAT is accessible only from a small set of whitelisted IP addresses, so you will need to proxy via our dedicated proxy server. For SSHing into it or any of the other hosts, you do not need to do anything special, as the SSH configuration file takes everything into account. However, in order to access the web applications, yours and othersʼ, in any other way (browser, other scanning tools), you need to setup a SOCKS proxy. The toolbox host is already setup to transparently proxy all non-local traffic, so you donʼt need to do anything on it. To access the hosts from your local machine, you need to start a SOCKS proxy on some port (for example 2872) as follows:
+
+ssh -D 2872 -fnN _proxy.cybersecuritychallenge-finale.nz
+To tunnel via the proxy you can use sshuttle:
+
+sshuttle -r _proxy.cybersecuritychallenge-finale.nz -x 10.0.0.0/8 -x 172.16.0.0/12 -x 192.168.0.0/16 -x 127.0.0.0/8 0/0
+Alternatively, you need to configure whatever application you use to go via the SOCKS proxy:
+
+Burp Suite
+Go to Project Options ❯ Connections ❯ SOCKS Proxy and input localhost:2872. See a screenshot.
+Firefox
+Install FoxyProxy, then click on “Add” to add a new SOCKS5 proxy at localhost:2872. Then click on “Save & Edit Patterns” and add a “New White” for *.cybersecuritychallenge-finale.nz. Disable the default pattern of *. Click on FoxyProxyʼs icon and select “Use Enabled Proxies by Patterns and Order”. See screenshots.
+Chrome
+Install SwitchyOmega, then click on “New Profile” to add a new Proxy profile. Select SOCKS5 as the protocol and localhost:2872 as the server and port. Then create another profile, this time of type “Switch”, add a “Host wildcard” condition for *.cybersecuritychallenge-finale.nz and select the SOCKS5 profile you just created. Click on “Apply changes” on the left. Click on SwitchyOmegaʼs icon and select the switch profile. See screenshots.
+Logging into the hosts via SSH
+To SSH to any of the hosts do
+
+ssh {host}.csc
+for example:
+
+ssh admin.csc
+You will be logged in as user ec2-user. To get a root shell do:
+
+sudo bash
+Your SSH key is authorized to login as ec2-user (ubuntu on toolbox), which has with full sudo privileges on the five hosts, as well as your toolbox, but can only proxy via NAT, i.e. you cannot, and do not need to, get a shell on NAT.
+
+Accessing the webapp via a browser
+The URLs for the public and admin side of the service desk web application are as follows:
+
+public frontend
+https://{your username}.cybersecuritychallenge-finale.nz/tickets
+admin portal
+https://{your username}.cybersecuritychallenge-finale.nz/admin
+Your admin accountʼs username is the same as the username you registered here, and the password is as given to you after deployment (as “Admin password”).
+
+To access (and start hacking!) other peopleʼs webapps, just use their username instead. Their name on the scoreboard will link to their domain too.
+
+Accessing your database
+You can login directly to your database by SSHing to db and running the following:
+
+mysql -h db -u root -p
+Use the password given to you after deployment (as “DB password”).
+
+Fixing your infrastructure
+You have full root privileges on the five vulnerable hosts so you can change whatever you like.
+
+Rebuilding docker containers
+All hosts except db run a web server inside a docker container. The source code and Dockerfile are in /media/app (which you would know if you inspected the CloudFormation template 😉).
+
+After making changes to the code or Dockerfile you can rebuild and restart the container by running:
+
+service csc-docker update
+The service takes its configuration from /etc/default/csc-docker which you may also want to inspect and change...
+
+The csc-docker service knows other actions too, except for update. For example, status, restart, logs, attach (to get a shell inside) and others.
+
+After rebuilding docker images many times you may get a "No space left on device" error. Just run docker system prune.
+
+Resetting an instance to its default
+If something goes horribly wrong and you need to start clean you can reset the whole instance by running the following command:
+
+$(awk -F= '/^action=/ {sub(/^action=/, ""); print}' /etc/cfn/hooks.d/cfn-auto-reloader.conf)
+Note that any changes youʼve made will be overridden.
+
+Also note that this wonʼt reset the database. To do this you need to either run DROP DATABASE tickets; in the MySQL shell or stop the MySQL server and delete its directories by running rm -rf /var/lib/mysql* /var/log/mysql*. After deleting the database you can run the following command on the db host:
+
+/usr/local/bin/setup_db.py DBPassword_{your username} ap-southeast-2
+Please donʼt abuse this to remove to remove data submitted by your opponents and only use it if the database becomes corrupted or otherwise unusable. Play fair.
+
+Scoring
+The vulnerabilities we have put fall into one of the following categories:
+
+Cross-site scripting (XSS)
+SQL injection (SQLi)
+Remote code execution (RCE)
+UNIX user privilege escalation
+Escaping a docker container
+Admin account takeover or escalation to admin
+A little something extra 😋
+Each vulnerability gives you a certain number of points, depending on its exploit difficulty. The same number of points are deducted form your score if someone else exploits a vulnerability on one of your hosts!
+
+Scoreboard columns
+Total score
+points earned - penalty - weighted persistence
+Points earned
+Total points earned for exploiting vulnerabilities. Only the first exploitation of a given vulnerability gives the maximum points; subsequent exploitations/detections give less extra points.
+Points lost
+Total points lost for being owned by someone else. As with the given points, only the first time you are owned via a given vulenrability will deduct the maximum points.
+Persistence
+Total persistence score (arbitrary scale). See Persistence below.
+Penalty
+Total points deducted due to our automated script being unable to parse your web page or login to it. See Penalties below.
+Number of vulns has hacked
+The number of vulnerabilities you have exploited. Counted once only, regardless of how many victims you have owned in this way.
+Number of vulns has been hacked
+The number of vulnerabilities someone else has exploited on your hosts. Counted once only, regardless of how many attackers have owned you in this way.
+Detection
+Some “ownages” you report to us manually via one of the menu options in the scoreboard, while some other ownages we detect automatically, via a script which runs every few minutes (see Our monitoring below). Your score will be updated every time the script runs or you report an ownage. The first time you exploit a given vulnerability, you will get maximum points. On subsequent occurences, if the script detects again that your victim hasnʼt fixed it, you get some extra points (roughly a quarter of the maximum points).
+
+Hereʼs an overview of how we confirm an ownage:
+
+XSS
+Your injected script should define a global (i.e. under window) variable with the same name as the XSS token you got. Our script will look for it. The value can be anything (other than undefined) and is ignored. You get more points if your payload runs when the page loads without any browsing required (i.e. without the need to view any ticket messages). You get persistence for this ownage everytime our script reloads the victimʼs page and detects your XSS.
+SQLi
+Retrieve the database serverʼs server_uuid (global MySQL variable) and report it to us via “I got SQLi” in the scoreboard. You do not get persistence for this ownage.
+RCE
+You can either report this manually or let us detect it. To report manually, retrieve the SHA256 sum of /etc/passwd and report it via “I got RCE” in the scoreboard.
+If you want us to auto-detect it the next time our monitoring script runs, then connect via TCP to connback.csc (which just points to NATʼs private IP address) on port 49001, and send your name (exactly as is, no spaces and same capitalization). You can for example use netcat:
+nc connback.csc 49001
+myname[Enter]
+You should receive an “OK” in response.
+If netcat is not available (e.g. youʼre inside a limited docker) or you donʼt want to occupy your terminal session with a foreground process, then you can use some bash magic:
+exec 3<>/dev/tcp/connback.csc/49001
+echo myname >&3
+Check if you got OK with:
+cat <&3
+It is safe to stop the cat process with Ctrl-C afterwards, the shell will keep file descriptor 3 open.
+If you want to get persistence you must keep the connection alive for as long as possible. Everytime our script runs it will check for such connections and add persistence score.
+Privilege escalation and docker escape
+Retrieve the SHA256 sum of /etc/shadow and report it to us via “I got RCE” in the scoreboard. If youʼve escaped docker, then obviously get the hash of the file on the host system. You do not get persistence for this ownage.
+Admin account takeover
+If you got the plaintext admin password, report it to us via “I got admin creds” in the scoreboard. You do not get persistence for this ownage.
+Persistence
+For some vulnerabilities, you also get points for persistence, which adds to your total score. The persistence score depends on the number of times our script detected your ownage without interruption. The longer the chain of consecutive detections, the more points. Are you ready for some maths? In particular, each ownage (defined by a unique triple of vulnerability, hacker and victim) gets persistence points equal to the sum over all sets of consecutive detections (> 1) of 1.2^( num. of consecutive detections - 1 ). This adds to the total score of the hacker a weighted score of persistence points × max points for this vulnerability / 2.5.
+
+What this means is that you will get an extra 100% of the maximum vulnerability points if you persist for half an hour, 300% if you persist for an hour and 2,660% if you persist for two hours!
+
+Hints
+We aimed to have a good mix of easy, medium and (quite) difficult to find and exploit vulnerabilities. In fact, some of the vulnerabilities are so tricky that we donʼt expect you to be able to exploit, or even find, them in the time given, so do make use of the hints, they are quite helpful.
+
+When you use a hint, no penalty is applied immediately. Rather a certain percentage (as indicated on the “HELP!” button) will be deducted from the points you receive if and when you exploit this vulnerability. The weighted persistence score for this vulnerability will also be scaled by the same percentage.
+
+Our monitoring
+We have a script (hosted externally) which monitors the admin web portal of each participant and checks for XSS. It also clicks on each messageʼs “Is this phishy?” button in the admin portal, in order to validate the message against validator. This means that any payloads (XSS or otherwise) that you inject into your opponentsʼ applications will be triggered within a few minutes, regardless if the “victim” is browsing their site (we are browsing on their behalf).
+
+Penalties
+Our script uses its own dedicated user (called aura). If for any reason our script is unable to browse your applications you will be penalised. Every time the script runs, if it canʼt connect or parse the page properly a small amount will be deducted from your score. If it can parse the page, but the login request returns 401 (meaning our user was modified or deleted), the penalty is higher.
+
+We display scoreboard results in real time (updated every time our script runs, or everytime someone reports their ownage). Itʼs up to you to check that the scoreboard detects your exploit and updates your score. If you think the script should have detected your XSS or whatever when it hasnʼt, talk to us.
+
+Useful resources, i.e. FREE HINTS
+ MySQL SQL Injection Cheat Sheet
+ Reverse Shell Cheat Sheet
+ Emulating netcat -e
+ Upgrading Simple Shells to Fully Interactive TTYs
+ Pretend to be a tty in bash for any command
+ Executing Shell Commands with Node.js
+ Using Burp to Brute Force a Login Page
+ Burp Intruder Payload types
+ Burp Intruder Attack Types
+ How to Crack MD5 Hashes Using hashcat
+ JWT Attack Walk-Through
+ The Dangers of docker.sock
+ Why Running a Privileged Container in Docker Is a Bad Idea
+ How does Bluebird promisify work? (i.e. how to do async node.js reverse shells)
+ A guide to Linux Privilege Escalation
+ List of CVEs in MySQL
+ Exploit Database
+And one more tip from us. If youʼve spawned a reverse shell and want to prevent it from being killed when its parent process ends, you can put it in the background and disown it:
+
+bash -c 'reverse shell stuff & sleep 1; disown -h %%'

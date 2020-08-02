@@ -1,0 +1,43 @@
+Cybersec Challenge 2020 | Hints
+RCE in tickets
+Is it considered RCE when itʼs intended? I mean, if you wanted to get a shell onto a Linux box what would be the default way? How did you get a shell onto your own infrastructure? Nuff said, get onto someoneʼs api box via RCE on it and just login to tickets.
+
+RCE in admin
+Iʼm guessing you saw the PUT /hook and GET /hooks endpoints but couldnʼt quite figure out what they do? Adding a hook, via PUT /hook, will search the file given as a path parameter for a function definition (python, of course) with the name given in the hook parameter? Running the hook via GET /hooks, will run it. Simple right? Now you just have to find a file which you can write your code to... Have you checked out the configuration file for the admin server?
+
+RCE in validator
+validator had one simple job to do and it doesnʼt seem to do it very well (or rather very safely). It just takes a list of hostnames and checks each against a hardcoded list of allowed hosts, using awk. Any URLs you include in a message will eventually make their way into validator, and into the awk command invoked by the shell. But thereʼs a caveat of course, only the hostname part of the URLs is sent and, if you havenʼt noticed in /admin/js/main.js, that is limited by the following regex: /https?://([^/ ]+)/. Can you figure out a way to get useful command injection (check out Reverse Shell Cheat Sheet) while avoiding spaces and slashes? (Subhint: shells treat most whitespace-like characters the same).
+
+RCE in db
+If you havenʼt yet found a way to inject SQL statements into the database, do that first, then come back to this one.
+Did you wonder why we went through the trouble of explicitly installing a specific old version of MySQL? It has one particular vulnerability. You will need to adapt the public proof of concept (PoC), of course, these things almost never work out of the box. Look through its code to see what SQL statements it executes, these are the ones you need to inject. You will have to slightly tweak the C library it uses to use the correct configuration file location, and connect-back host. Make sure you compile the library for the correct architecture (in fact, why not make use of toolbox). One more hint from us: the original PoC injects a [mysqld] section and the malloc_lib setting into the configuration file. These are not quite valid on the version weʼre using... Check out the manual.
+
+RCE in api
+Well, there are actually quite a few ways to go about this. One is readily-exploitable but will give you a limited shell, another one requires you to have already a shell on another host but will get you root straight away. With option one you can just eval whatever you want, as long as you are a persistent spammer. With option two you can just drop a shell over FTP.
+
+Docker escape in api, admin, validator
+Did you read through all of The Dangers of docker.sock? Including the “Update”? And did you try the demo lab by benhall linked to? If you did and couldnʼt figure out how it gets access to the devices from within the container, do docker inspect --format='{{.Config.Cmd}}' benhall/cute-kittens and inspect the script invoked at startup to see what it does. You did that and donʼt know what to do with those weirdly named files in /dev? One of those weird device files is the host filesystem... Just change your root to it...
+
+Privilege escalation to root in tickets
+One of the first things you check for on a compromised box is cron jobs...
+
+Privilege escalation to root in validator
+Did you notice that www-data can run certain commands as root with sudo? And that said commands can invoke a shell? Well, that feature only works in pager mode...
+
+Privilege escalation to root in api
+Did you notice that www-data can run certain commands as root with sudo? And did you try to google “apt-get privilege escalation”?
+
+XSS in admin
+🤔 Did you actually try to just put a <script> tag in a message?
+
+XSS in tickets
+Who said a <script> tag is the only way to run JavaScript? Thatʼs what events are for.
+
+Privilege escalation to admin
+If you got SQLi you can do an offline brute force, otherwise—an online brute force attack. Did you not checkout our FREE HINTS? 😋 There are other ways to go about it too, but we leave it to you 😉
+
+Database password retrieval
+/usr/local/bin/setup_db.py on db, as well as the API servers on api and admin all need the password for the databse. Did you check the CloudFormation template to see how they retrieve it?
+
+SQLi
+Did you see how SQL queries are constructed in app/controllers/tickets.js and app/controllers/users.js? No parametrised queries, no prepared statements, no nothing... Just a double-quoted request parameter... Fun fact: you can add data from any table to the query result with a UNION.

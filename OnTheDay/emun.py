@@ -2,7 +2,7 @@ import requests as reqs
 import urllib3.exceptions
 
 XSS_KEY = 'abcd'
-usernames = ['Fromage', 'Samdaman']
+usernames = ['Fromage', 'Dast', 'RavSS', 'technocoder', 'tomais']
 
 
 class Attack:
