@@ -1,0 +1,20 @@
+Layer 0
+	Link: http://redirect-youtube.epizy.com/p5f7r6as.php?pass=no
+	Which redirects to despacito 2 on youtube
+	Really you need to crack it with sql injection to get the password
+	Which is "5amd4hack0r"
+
+Layer 1
+	Encrypted word document called meme (no extension)
+	Password protected with the password md5(urgay)
+
+Layer 2
+	Zip or bzip or achive file which will be hidden inside the unused bytes of a png
+
+Layer 3
+	png file with archive file in unused bytes and a password image encoded into the
+	LSB of the alpha channel
+
+Password for Layer 1
+	Encoded in the LSB of the alpha channel of the png, will only be visible when you zoom out
+	Will probably have to use python to convert the LSB to text or similar

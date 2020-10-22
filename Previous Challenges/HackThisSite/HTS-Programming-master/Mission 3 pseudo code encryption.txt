@@ -1,0 +1,16 @@
+for each letter in the plaintext with index i
+    ith encrypted value is:
+          the chrcode of the letter plus...
+          + the hex code of the (i % 32)th passwordmd5 character minus...
+          - the intmd5total
+    intmd5total becomes sum of the hexidecimal values of the concatanation of:
+          the first 16 hex characters of the md5 of a substring which is the first i characters of the plain_text
+          the first 16 hex characters of the md5 of the previous intmd5total
+end for
+
+note intmd5total(0) = rand(0-480)
+0th encrypted value is chrcode(0th letter) + hexcode(0th passwordmd5 character) - intmd5total(0)
+intmd5total(1) = hexsum(first16(md5(first1(plaintext))) + first16(md5(intmd5total(0)
+
+1th encryoted value is chrcode(1th letter) +  hexcode(1th passwordmd5 character) - intmd5total(1)
+intmd5total(2) = hexsum(first16(md5(first2(plaintext))) + first16(md5(intmd5total(1)
