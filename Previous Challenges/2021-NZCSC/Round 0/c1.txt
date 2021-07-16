@@ -1,0 +1,11 @@
+V+QQEMfkRgUXVy8d8aI93UfMI9auuIGkco2Zm7Gs2bc+pFS1hgR7+ppKqHgyn3XeLGpUggbuAMU=
+
+57e41010c7e4460517572f1df1a23ddd47cc23d6aeb881a4728d999bb1acd9b73ea454b586047bfa9a4aa878329f75de2c6a548206ee00c5
+
+Trying "richard"
+{'inputString': 'V+QQEMfkRgUXVy8d8aI93UfMI9auuIGkco2Zm7Gs2bc+pFS1hgR7+ppKqHgyn3XeLGpUggbuAMU=', 'secretKey': 'richard'}
+b'{"inputString":"V+QQEMfkRgUXVy8d8aI93UfMI9auuIGkco2Zm7Gs2bc+pFS1hgR7+ppKqHgyn3XeLGpUggbuAMU=","outputString":"\xef\xbf\xbd\xef\xbf\xbd\\u001FquY\\u0005?\\f\\u0012 \xef\xbf\xbd\\u0002\\u0003j\xef\xbf\xbd+\xef\xbf\xbd\\u0002\xef\xbf\xbdY\xef\xbf\xbdy\\u001E\xef\xbf\xbd\'\xef\xbf\xbd\xd7\xb1\xef\xbf\xbd^\xd7\xa2\xef\xbf\xbd\xef\xbf\xbdM\\u000F\xef\xbf\xbdD\xef\xbf\xbd>\xef\xbf\xbdw7\xef\xbf\xbd\xef\xbf\xbde","round":null,"plainPass":null,"secretKey":"richard","twoWay":false}'
+
+Trying "precious"
+{'inputString': 'V+QQEMfkRgUXVy8d8aI93UfMI9auuIGkco2Zm7Gs2bc+pFS1hgR7+ppKqHgyn3XeLGpUggbuAMU=', 'secretKey': 'precious'}
+b'{"inputString":"V+QQEMfkRgUXVy8d8aI93UfMI9auuIGkco2Zm7Gs2bc+pFS1hgR7+ppKqHgyn3XeLGpUggbuAMU=","outputString":"\xef\xbf\xbd\'\xdb\x99\xef\xbf\xbd\xd5\xae\\u0010\\u0005[\xef\xbf\xbd$\xef\xbf\xbdF\xef\xbf\xbd\\u0016\\u0010Ne\xef\xbf\xbd*k\xef\xbf\xbdh\xef\xbf\xbdB}\xef\xbf\xbdF0\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd04\xef\xbf\xbd5,p$j\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd","round":null,"plainPass":null,"secretKey":"precious","twoWay":false}'
