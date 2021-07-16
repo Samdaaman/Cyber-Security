@@ -1,5 +1,9 @@
 # Cyber Security
 
+https://raw.githubusercontent.com/Samdaaman/Cyber-Security/master/HTB/Challenges/pwn/2021-02-23-Restaurant/exploit2.py
+
+https://github.com/JohnHammond/ctf-katana
+
 ## Windows/Linux repo only Setup
 ```
 python3 setup.py
