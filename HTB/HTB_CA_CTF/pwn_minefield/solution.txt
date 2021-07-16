@@ -1,0 +1,6 @@
+.fini_array	 	
+This section holds an array of function pointers that contributes to a single termination array for the executable or shared object containing the section.
+
+2
+0x601078  -> address of __do_global_dtors_aux() in the .fini_array section
+0x40096b  -> address of _() which cats the flag

@@ -1,0 +1,12 @@
+BurpSuite
+Wfuzz
+Cewl
+JohnTheRipperJumbo
+Postman
+Sqlmap
+Dirbuster
+http-server
+linPeas and LinEnum
+Metaploit
+
+

