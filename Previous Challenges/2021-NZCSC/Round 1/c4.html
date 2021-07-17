@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+   <head>
+      <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+      <title>Cyber Security Challenge</title>
+      <meta charset="UTF-8">
+      <meta name="keywords" content="Cyber, Security, Challenge, Waikato, Competition, University, Server, Crow, Encryption, SQL, Injection, Drone, IT, Server, Side, Protection, Attack, Defend">
+      <meta name="description" content="The NZ Cyber Security Challenge is back! A huge competition involved around the idea of security on the internet. Jump in and register for your share of workshops, challenges, prizes and presentations.">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <link rel="icon" type="image/ico" href="files/assets/favicon.ico">
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+      <link rel="stylesheet" media="screen and (min-width: 950px)" href="files/css/web.css">
+      <link rel="stylesheet" media="screen and (max-width: 950px)" href="files/css/phone.css">
+      <link href="files/css/font.css" rel="stylesheet">
+      <script src="files/scripts/javaScript.js"></script>
+   </head>
+
+   <body>
+      <div class="navbar">
+         <div class="navbar__logo">
+            <span class="navbar__logo__home">
+               <i class="fa fa-home" onclick="location.href='/home'"></i>
+            </span>
+            <img class="navbar__logo__image" src="files/assets/csc_watermark.png" alt="NZCSC-logo">
+         </div>
+         <div class="navbar__content">
+            <div class="mobile">
+               <select id="SELECT" onchange="selection();">
+                  <option value="0" selected="selected">HOME</option>
+                  <option value="1">CH1</option>
+                  <option value="2">CH2</option>
+                  <option value="3">CH3</option>
+                  <option value="4">CH4</option>
+                  <option value="5">CH5</option>
+                  <option value="6">CH6</option>
+                  <option value="7">CH7</option>
+                  <option value="8">CH8</option>
+                  <option value="9">CH9</option>
+                  <option value="10">CH10</option>
+                  <option value="11">CH11</option>
+                  <option value="12">CH12</option>
+                  <option value="13">CH13</option>
+                  <option value="14">CH14</option>
+               </select>
+            </div>
+            <div class="navbar-buttons">
+               <div class="navbar__button__container">
+                  <button type="button" onclick="window.open('/challenge1/','_blank')" class="navbar__button" id="CH1-BUTTON">Challenge 1</button>
+                  <button type="button" onclick="window.open('/challenge2/','_blank')" class="navbar__button" id="CH2-BUTTON">Challenge 2</button>               
+                  <button type="button" onclick="window.open('/challenge3/','_blank')" class="navbar__button" id="CH3-BUTTON">Challenge 3</button>
+                  <button type="button" onclick="window.open('/challenge4/','_blank')" class="navbar__button" id="CH4-BUTTON">Challenge 4</button>
+                  <button type="button" onclick="window.open('/challenge5/','_blank')" class="navbar__button" id="CH5-BUTTON">Challenge 5</button>
+               </div>
+               <div class="navbar__button__container"> 
+                  <button type="button" onclick="window.open('/challenge6/','_blank')" class="navbar__button" id="CH6-BUTTON">Challenge 6</button>
+                  <button type="button" onclick="window.open('/challenge7/','_blank')" class="navbar__button" id="CH7-BUTTON">Challenge 7</button>
+                  <button type="button" onclick="window.open('/challenge8/','_blank')" class="navbar__button" id="CH8-BUTTON">Challenge 8</button>
+                  <button type="button" onclick="window.open('/challenge9/','_blank')" class="navbar__button" id="CH9-BUTTON">Challenge 9</button>
+                  <button type="button" onclick="window.open('/challenge10/','_blank')" class="navbar__button" id="CH10-BUTTON">Challenge 10</button>
+               </div>
+               <div class="navbar__button__container">
+                  <button type="button" onclick="window.open('/challenge11/','_blank')" class="navbar__button" id="CH11-BUTTON">Challenge 11</button>
+                  <button type="button" onclick="window.open('/challenge12/','_blank')" class="navbar__button" id="CH12-BUTTON">Challenge 12</button>
+                  <button type="button" onclick="window.open('/challenge13/','_blank')" class="navbar__button" id="CH13-BUTTON">Challenge 13</button>
+                  <button type="button" onclick="window.open('/challenge14/','_blank')" class="navbar__button" id="CH14-BUTTON">Challenge 14</button>
+                  <button type="button" onclick="window.open('/challenge15/','_blank')" class="navbar__button" id="CH15-BUTTON">Challenge 15</button>
+	       </div>
+            </div>
+         </div>
+      </div>
+      <div class="page__content">
+         <div class="page__content__logo">
+            <img src="files/assets/crow_gold.png" alt="themelogo">
+         </div>
+         <div class="page__content__container">
+            <div class="page__content__data">        
+               <br/>
+               <h4 style="color:#1E90FF;"> It's time to relax and play a little game.</h4>
+               <br/>
+	       Challenger,<br/>
+	       Here is a little game for you. <br/>
+	       You choose a time in seconds, and then hit ENTER to start and stop the timer. <br/>
+	       You win if you can stop the timer at the right time. You can also play with your friends and see who gets the closest.<br/>
+	       The game is hosted on 13.211.203.125 port 9004 and is accessible through netcat.<br/>
+	       Here’s an executable <a href="Timer">file</a> to enjoy the game offline. If this doesn’t work, compile the <a href="main.c">source code</a>.<br/>
+Hint: Break the game to get the flag.
+            </div>
+         </div>
+      </div>
+   </body>
+</html>
