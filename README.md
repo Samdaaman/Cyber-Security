@@ -17,7 +17,7 @@ chmod +x setup_linux_runonce.sh
 ```
 
 ## Tools to install
-- python3-requests python3-venv python3-pip python3-pwntools
+- python3-requests python3-venv python3-pip python3-dev
 - ghidra  https://github.com/NationalSecurityAgency/ghidra/releases
   - gotools for ghidra https://github.com/felberj/gotools
 - burp
@@ -30,3 +30,4 @@ rm burp.sh
 - binwalk
 - vim
 - wireshark
+- pwntools `sudo pip3 install --upgrade git+https://github.com/arthaud/python3-pwntools.git`
