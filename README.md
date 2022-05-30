@@ -30,9 +30,20 @@ chmod +x setup_linux_runonce.sh
 - binwalk
 - vim
 - wireshark
-- pwntools `sudo pip3 install --upgrade git+https://github.com/arthaud/python3-pwntools.git`
+- pwntools ```sudo pip3 install --upgrade git+https://github.com/arthaud/python3-pwntools.git```
 - node (nvm)
     ```
     curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
     nvm install 16
     ```
+- steghide
+- stegseek https://github.com/RickdeJager/stegseek/releases
+- rockyou.txt
+- nmap
+- pwncat
+    ```
+    pip install pwncat-cs
+    ```
+- dirbuster
+- wfuzz
+- sqlmap
