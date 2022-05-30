@@ -21,13 +21,18 @@ chmod +x setup_linux_runonce.sh
 - ghidra  https://github.com/NationalSecurityAgency/ghidra/releases
   - gotools for ghidra https://github.com/felberj/gotools
 - burp
-```
-wget --no-cache -O burp.sh "https://portswigger.net/burp/releases/download?product=community&type=Linux"
-chmod +x burp.sh
-sudo ./burp.sh
-rm burp.sh
-```
+    ```
+    wget --no-cache -O burp.sh "https://portswigger.net/burp/releases/download?product=community&type=Linux"
+    chmod +x burp.sh
+    sudo ./burp.sh
+    rm burp.sh
+    ```
 - binwalk
 - vim
 - wireshark
 - pwntools `sudo pip3 install --upgrade git+https://github.com/arthaud/python3-pwntools.git`
+- node (nvm)
+    ```
+    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
+    nvm install 16
+    ```
