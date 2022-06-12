@@ -1,7 +1,10 @@
 import socketserver
 from Crypto.Cipher import AES
 import os
-from secret import flag, key
+from icecream import ic
+
+flag = b'HTB{FAKE_FLAG_FOR_TESTING_YEEEEEET}'
+key = b'1234567812345678'
 
 fib = [1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 121, 98, 219, 61]
 
@@ -30,146 +33,150 @@ menu_msg = """\n
 """[1:]
 
 def xor(a, b):
-	return bytes([_a ^ _b for _a, _b in zip(a, b)])
+    return bytes([_a ^ _b for _a, _b in zip(a, b)])
 
 
 def pad(data): #Custom padding, should be fine!
-	c = 0
-	while len(data) % 16:
-		pad = str(hex(fib[c] % 255))[2:]
-		data += unhex("0" * (2-len(pad)) + pad)
-		c += 1
-	return data
+    c = 0
+    while len(data) % 16:
+        pad = str(hex(fib[c] % 255))[2:]
+        data += unhex("0" * (2-len(pad)) + pad)
+        c += 1
+    return data
 
 
 def checkpad(data):
-	
-	if len(data) % 16 != 0:
-		return 0
-	char = data[-1]
+    
+    if len(data) % 16 != 0:
+        return 0
+    char = data[-1]
 
-	try:
-		start = fib.index(char)
-	except ValueError:
+    try:
+        start = fib.index(char)
+    except ValueError:
 
-		return 0
-	
-	newfib = fib[:start][::-1]
+        return 0
+    
+    newfib = fib[:start][::-1]
 
-	for i in range(len(newfib)):
-		char = data[-(i+2)]
-		if char != newfib[i]:
-			return 0
-	return 1
+    for i in range(len(newfib)):
+        char = data[-(i+2)]
+        if char != newfib[i]:
+            return 0
+    return 1
 
 def unhex(data):
-	return bytes.fromhex(data)
+    return bytes.fromhex(data)
 
 class SuperSecureEncryption: # This should be unbreakable!
-	def __init__(self, key):
-		self.cipher = AES.new(key, AES.MODE_ECB)
+    def __init__(self, key):
+        self.cipher = AES.new(key, AES.MODE_ECB)
 
-	def encrypt(self, data):
-		data = pad(data)
-		
-		a = os.urandom(16).replace(b'\x00', b'\xff') 
-		b = os.urandom(16).replace(b'\x00', b'\xff')
+    def encrypt(self, data):
+        data = pad(data)
+        
+        a = os.urandom(16).replace(b'\x00', b'\xff') 
+        b = os.urandom(16).replace(b'\x00', b'\xff')
 
-		lb_plain = a
-		lb_cipher = b
-		output = b''
+        lb_plain = a
+        lb_cipher = b
+        output = b''
 
-		data  = [data[i:i+16] for i in range(0, len(data), 16)]
+        data  = [data[i:i+16] for i in range(0, len(data), 16)]
 
-		for block in data:
-	
-			enc = self.cipher.encrypt(xor(lb_cipher, block))
-			enc = xor(enc, lb_plain)
-			output += enc
-			lb_plain = block
-			lb_cipher = enc
-		return output, a.hex(), b.hex()
+        for block in data:
+            enc = self.cipher.encrypt(xor(lb_cipher, block))
+            # ic(xor(lb_cipher, block))
+            # ic(enc)
+            enc = xor(enc, lb_plain)
+            output += enc
+            lb_plain = block
+            lb_cipher = enc
+        return output, a.hex(), b.hex()
 
-	def decrypt(self, data, a, b):
-		lb_plain = a
-		lb_cipher = b
-		output = b''
-		data = [data[i:i+16] for i in range(0, len(data), 16)]
-		for block in data:
-			dec = self.cipher.decrypt(xor(block, lb_plain))
-			dec = xor(dec, lb_cipher)
-			output += dec
-			lb_plain = dec
-			lb_cipher = block
-		if checkpad(output):
-			return output
-		else:
-			return None
+    def decrypt(self, data, a, b):
+        lb_plain = a
+        lb_cipher = b
+        output = b''
+        data = [data[i:i+16] for i in range(0, len(data), 16)]
+        for block in data:
+            # ic(xor(block, lb_plain))
+            dec = self.cipher.decrypt(xor(block, lb_plain))
+            dec = xor(dec, lb_cipher)
+            output += dec
+            lb_plain = dec
+            lb_cipher = block
+        if checkpad(output):
+            return output
+        else:
+            return None
 
 def encryptFlag():
-	encrypted, a, b = SuperSecureEncryption(key).encrypt(flag)
-	return f'encrypted_flag: {encrypted.hex()}\na: {a}\nb: {b}'
+    encrypted, a, b = SuperSecureEncryption(key).encrypt(flag)
+    return f'encrypted_flag: {encrypted.hex()}\na: {a}\nb: {b}'
 
 def sendMessage(ct, a, b):
-	if len(ct) % 16:
-		return "Error: Ciphertext length must be a multiple of the block length (16)!"
-	if len(a) != 16 or len(b) != 16:
-		return "Error: a and b must have lengths of 16 bytes!"
-	decrypted = SuperSecureEncryption(key).decrypt(ct, a, b)
-	if decrypted != None:
-		return "Message successfully sent!"
-	else:
-		return "Error: Message padding incorrect, not sent."
+    if len(ct) % 16:
+        return "Error: Ciphertext length must be a multiple of the block length (16)!"
+    if len(a) != 16 or len(b) != 16:
+        return "Error: a and b must have lengths of 16 bytes!"
+    decrypted = SuperSecureEncryption(key).decrypt(ct, a, b)
+    if decrypted != None:
+        return "Message successfully sent!"
+    else:
+        return "Error: Message padding incorrect, not sent."
 
 def handle(self):
-	self.write(wlc_msg)
-	while True:
-		self.write(menu_msg)
-		option = self.query("Your option: ")
-		if option == "0":
-			self.write(encryptFlag())
-		elif option == "1":
-			try:
-				ct = unhex(self.query("Enter your ciphertext in hex: "))
-				b = unhex(self.query("Enter the B used during encryption in hex: "))
-				a = b'HTB{th3_s3crt_A}' # My secret A! Only admins know it, and plus, other people won't be able to work out my key anyway!
-				self.write(sendMessage(ct,a,b))
-			except ValueError as e:
-			  self.write("Provided input is not hex!")
-		else:
-			self.write("Invalid input, please try again.")
+    self.write(wlc_msg)
+    while True:
+        self.write(menu_msg)
+        option = self.query("Your option: ")
+        if option == "0":
+            self.write(encryptFlag())
+        elif option == "1":
+            try:
+                ct = unhex(self.query("Enter your ciphertext in hex: "))
+                b = unhex(self.query("Enter the B used during encryption in hex: "))
+                a = b'HTB{th3_s3crt_A}' # My secret A! Only admins know it, and plus, other people won't be able to work out my key anyway!
+                self.write(sendMessage(ct,a,b))
+            except ValueError as e:
+              self.write("Provided input is not hex!")
+        else:
+            self.write("Invalid input, please try again.")
 
 
 
 
 class RequestHandler(socketserver.BaseRequestHandler):
-	handle = handle
+    handle = handle
 
-	def read(self, until='\n'):
-		out = ''
-		while not out.endswith(until):
-			out += self.request.recv(1).decode()
-		return out[:-len(until)]
+    def read(self, until='\n'):
+        out = ''
+        while not out.endswith(until):
+            out += self.request.recv(1).decode()
+        return out[:-len(until)]
 
-	def query(self, string=''):
-		self.write(string, newline=False)
-		return self.read()
+    def query(self, string=''):
+        self.write(string, newline=False)
+        return self.read()
 
-	def write(self, string, newline=True):
-		self.request.sendall(str.encode(string))
-		if newline:
-			self.request.sendall(b'\n')
+    def write(self, string, newline=True):
+        self.request.sendall(str.encode(string))
+        if newline:
+            self.request.sendall(b'\n')
 
-	def close(self):
-		self.request.close()
+    def close(self):
+        self.request.close()
 
 class Server(socketserver.ForkingTCPServer):
 
-	allow_reuse_address = True
+    allow_reuse_address = True
 
-	def handle_error(self, request, client_address):
-		self.request.close()
+    def handle_error(self, request, client_address):
+        self.request.close()
 
-port = 1337
-server = Server(('0.0.0.0', port), RequestHandler)
-server.serve_forever()
+
+if __name__ == '__main__':
+    port = 1337
+    server = Server(('0.0.0.0', port), RequestHandler)
+    server.serve_forever()
