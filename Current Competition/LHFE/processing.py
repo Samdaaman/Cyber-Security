@@ -25,8 +25,8 @@ def run_shell_command(recipe_name: str, recipe_output: RecipeOutput, check_for_f
 
 
 def _check_for_flag(raw_string: str) -> List[Tuple[str, str]]:
-    search_strings = ['flag', 'galf']
-    regexes = [(r"[a-zA-Z0-9]{4}:[a-zA-Z0-9]{12}", 0), (r"[a-zA-Z0-9]{12}:[a-zA-Z0-9]{4}", 1)]
+    search_strings = ['RUNE', 'ENUR']
+    regexes = [(r"[a-zA-Z0-9]{4}{[a-zA-Z0-9_]}{16}", 0), (r"{[a-zA-Z0-9]{16}}[a-zA-Z0-9]{4}", 1)]
     results = []
     for search_str in search_strings:
         if search_str in raw_string:
@@ -80,7 +80,8 @@ def _enumerate_common_ciphers(flag_str: str, flag_results: List[Tuple[str, str]]
                     affine_flag += alphabet_affine[c * (alphabet_affine.index(char) - b) % 26]
                 else:
                     affine_flag += char
-            if 'flag:' in affine_flag:
+            # if 'flag:' in affine_flag:
+            if 'RUNE' in affine_flag:
                 flag_results.append((f'When Affine decrypted with a={a} and b={b} we got:', affine_flag))
 
 
