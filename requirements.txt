@@ -7,7 +7,7 @@ colored-traceback==0.3.0
 cryptography==3.4.7
 idna==3.2
 intervaltree==3.1.0
-Mako==1.1.4
+Mako==1.2.2
 MarkupSafe==2.0.1
 packaging==21.0
 paramiko==2.7.2
