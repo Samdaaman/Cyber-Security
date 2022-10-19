@@ -1,0 +1,66 @@
+import re
+from server import *
+from icecream import ic
+from Crypto.Util.number import long_to_bytes, bytes_to_long
+from hashlib import sha1
+import gmpy2
+from pwn import *
+from Crypto.PublicKey import RSA as PYRSA
+
+
+user = b'IT Department <it@cloudcompany.com>'
+hash = sha1(user).digest()
+asn1 = b"\x30\x21\x30\x09\x06\x05\x2b\x0e\x03\x02\x1a\x05\x00\x04\x14"
+
+
+def hex2(num: int):
+    return hex(num)[2:].rjust(512, '0')
+
+
+def forge(n: int):
+    prefix = b'\x00\x01\xff\x00' + asn1 + hash
+    prefix_shifted = bytes_to_long(prefix) << (256 - len(prefix)) * 8
+    ic(hex2(prefix_shifted))
+    root = int(gmpy2.iroot(prefix_shifted, 3)[0])
+    fake_sig = root+1
+    fake_sig_enc = pow(fake_sig, 3, n)
+    ic(hex2(fake_sig_enc))
+    return fake_sig
+
+
+def test():
+    e = 3
+    n = 20004897981835739210283682852897387567400488824210846338863207592745454751190656483019241812511250034440711990846454498602577130796850902273292653028227823824572272819925111984528354369966250230234612775255748203963570808026156536118273022006328073005058404822136032105752361669924728089013013795126856931470001039465795146495530709788181880628730151351838300038484169764355195774883492821255203554482510602277134170655685893810015637537892807544495549240912790985744717757793109656684272423054845406556998351465777274954797939903638052003313016270122784645787065186176922977440795179573942976316301389604955969762603
+    d = 13336598654557159473522455235264925044933659216140564225908805061830303167460437655346161208340833356293807993897636332401718087197900601515528435352151882549714848546616741323018902913310833486823075183503832135975713872017437690745515348004218715336705603214757354737168241113283152059342009196751237954313142551176765540413406551515396569760601095780121715217469720514019257667287369218977580576285018471019818004474516189467957956799157172203328509583277279062802749897555155799387256808184559545746435551949216816662452186477403740318252027344360142322608920356891597332646021726681668262350060741592169007378747
+    
+    fake_sig = forge(n)
+    decrypted = pow(fake_sig, e, n)
+    clearsig = decrypted.to_bytes(len(long_to_bytes(n)), "big")
+
+    r = re.compile(b'\x00\x01\xff+?\x00(.{15})(.{20})', re.DOTALL)
+    m = r.match(clearsig)
+
+    if not m:
+        return print('failed step 1')
+    if m.group(1) != asn1:
+        return print('failed step 2')
+    if m.group(2) != hash:
+        return print('failed step 3')
+    print('success')    
+
+
+def main():
+    # p = remote('localhost', 1337)
+    p = remote('188.166.174.231', 30440)
+    p.recvuntil(b'certificate: \n')
+    public_key_raw = p.recvuntil(b'-----END PUBLIC KEY-----')
+    public_key = PYRSA.import_key(public_key_raw)
+    fake_sig = forge(public_key.n)
+    fake_sig_hex = long_to_bytes(fake_sig).hex().encode()
+    p.sendlineafter(b'Enter the signature as hex: ', fake_sig_hex)
+    print(p.recvall().decode())
+
+
+if __name__ == '__main__':
+    # test()
+    main()

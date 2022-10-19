@@ -1,0 +1,1 @@
+FLAG = b'HTB{FAKE_FLAG}'

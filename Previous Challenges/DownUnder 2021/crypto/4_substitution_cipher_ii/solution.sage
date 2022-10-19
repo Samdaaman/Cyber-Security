@@ -2,47 +2,57 @@ from string import ascii_lowercase, digits
 from sage.all import *
 from icecream import ic
 
-
 CHARSET = "DUCTF{}_!?'" + ascii_lowercase + digits
-# enc = open('./output.txt', 'r').read().strip()
-
 n = len(CHARSET)
-ic(n)
 
-def encrypt(msg, f):
-    ct = ''
-    for c in msg:
-        ct += CHARSET[f.substitute(CHARSET.index(c))]
-    return ct
+def challenge():
+    def encrypt(msg, f):
+        ct = ''
+        for c in msg:
+            ct += CHARSET[f.substitute(CHARSET.index(c))]
+        return ct
 
-# P.<x> = PolynomialRing(GF(n))
-P = PolynomialRing(GF(n), names=('x',)); (x,) = P._first_ngens(1)
-f = P.random_element(6)
+    # P.<x> = PolynomialRing(GF(n))
+    P = PolynomialRing(GF(n), names=('x',)); (x,) = P._first_ngens(1)
+    f = P.random_element(6)
 
-FLAG = open('./flag.txt', 'r').read().strip()
-enc = encrypt(FLAG, f)
+    FLAG = open('./flag.txt', 'r').read().strip()
+    enc = encrypt(FLAG, f)
 
-ic(f)
-
-b = CHARSET.index(enc[0])
-a = (CHARSET.index(enc[1]) - b) % n
-
-ic(a)
-ic(b)
+    ic(f)
+    ic(enc)
+    return enc
 
 
-# known = 'DUCTF{}'
-# known_enc = enc[:6] + enc[-1]
+def main(ct: str):
+    ic(enc)
+    to_int = lambda i: CHARSET.index(i)
+    known_pt = 'DUCTF{}'
+    known_ct = ct[:len(known_pt)-1] + ct[-1]
+    ic(known_pt)
+    ic(known_ct)
 
-# assert len(known) == len(known_enc)
+    points = [(to_int(a), to_int(b)) for a, b in zip(known_pt, known_ct)]
+    ic(points)
 
-# while True:
-#     f = P.random_element(4) * x^2 + a*x + b
-#     enc_test = encrypt(known, f)
+    P = PolynomialRing(GF(n), 'x'); (x,) = P._first_ngens(1)
+    ic(P)
+    poly = P.lagrange_polynomial(points)
+    ic(poly)
 
-#     if enc_test == known_enc:
-#         break
+    inverse_subs = {}
+    for i in range(n):
+        y = poly.substitute(i)
+        if y not in inverse_subs.keys():
+            inverse_subs[y] = i
+    ic(inverse_subs)
 
-# print(f)
+    pt = ''.join(CHARSET[inverse_subs[to_int(c)]] for c in ct)
+    ic(pt)
 
+
+if __name__ == '__main__':
+    # enc = challenge()
+    enc = open('./output.txt', 'r').read().strip()
+    main(enc)
 
