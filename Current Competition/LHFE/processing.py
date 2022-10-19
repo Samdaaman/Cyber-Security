@@ -26,7 +26,7 @@ def run_shell_command(recipe_name: str, recipe_output: RecipeOutput, check_for_f
 
 def _check_for_flag(raw_string: str) -> List[Tuple[str, str]]:
     search_strings = ['RUNE', 'ENUR']
-    regexes = [(r"[a-zA-Z0-9]{4}{[a-zA-Z0-9_]}{16}", 0), (r"{[a-zA-Z0-9]{16}}[a-zA-Z0-9]{4}", 1)]
+    regexes = [(r"[a-zA-Z0-9]{4}{[a-zA-Z0-9_]{16}}", 0), (r"{[a-zA-Z0-9]{16}}[a-zA-Z0-9]{4}", 1)]
     results = []
     for search_str in search_strings:
         if search_str in raw_string:
