@@ -1,0 +1,7 @@
+We discovered this bootloader on one of our old game consoles. Can we compromise the security and run our own code.
+
+Test locally with: cat test.load | ./loader0.
+
+Challenge by @Joshua Scarsbrook
+
+nc austiccquals.cyber.uq.edu.au 4630

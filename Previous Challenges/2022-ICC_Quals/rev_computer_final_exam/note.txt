@@ -1,0 +1,5 @@
+It's your job to test this script before it goes public in a fortnight. Can you solve all the problems with the Python file given?
+
+Challenge by @Sealgair
+
+nc austiccquals.cyber.uq.edu.au 5318

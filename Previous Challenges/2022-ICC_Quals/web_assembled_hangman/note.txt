@@ -1,0 +1,5 @@
+Can you play a little game of hangman? This one has a fun twist in it's assembly.
+
+Challenge by @Joshua Scarsbrook
+
+http://austiccquals.cyber.uq.edu.au:4648/

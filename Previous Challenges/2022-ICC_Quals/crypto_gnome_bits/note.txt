@@ -1,0 +1,3 @@
+A little gnome fact is that RSA (Raspy, Sleepy, Angry) was actually invented during the Great Gnome Wars of 2718 B.C. However, much that once was is lost, for none now live who remember it. Recently, archaelogists uncovered a gnome home with a machine inside which implemented this algorithm... Figure out why the algorithm was lost to the ages, and uncover the secrets of the Gnomes...
+
+Challenge by @tmalc

@@ -1,0 +1,7 @@
+I got this service from Google and apparently it speaks some new thing over HTTP/2 that uses "Protobuf"? No clue honestly. Just figure it out.
+
+Note: What ever this thing is it doesn't work from a web browser.
+
+Challenge by @Joshua Scarsbrook
+
+http://austiccquals.cyber.uq.edu.au:4643/

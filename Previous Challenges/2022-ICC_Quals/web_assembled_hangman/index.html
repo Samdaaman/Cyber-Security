@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AustICCQuals - Hangman Game</title>
+
+    <style>
+        html {
+            font-family: sans-serif;
+            margin: 0 auto;
+            max-width: 1080px;
+        }
+
+        #keyboard>button {
+            border: 1px solid black;
+            margin: 5px;
+            padding: 10px;
+            font-family: monospace;
+        }
+
+        #keyboard {
+            width: 500px;
+            margin: 0 auto;
+        }
+
+        pre {
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>AustICCQuals - Hangman Game</h1>
+
+    <pre id="image">  +---+
+        |   |
+        O   |
+       /|\  |
+       / \  |
+            |
+      =========</pre>
+
+    <div id="container">
+
+        <pre id="lives">Lives Remaining: 6</pre>
+
+        <pre id="targetWord">Word: </pre>
+
+        <pre id="guessedLetters">Guessed Letters: </pre>
+
+        <div id="keyboard"></div>
+    </div>
+
+    <div id="win" style="display: none;">
+        <h2>Congratulations You Won</h2>
+
+        <button id="winTryAgain">Try Again</button>
+    </div>
+
+
+    <div id="lose" style="display: none;">
+        <h2>Sorry You Lost</h2>
+
+        <button id="loseTryAgain">Try Again</button>
+    </div>
+
+    <script>
+        const targetWord = `Are you playing the right game? This text has every letter of the English alphabet. You just need to zoom closer to win. Make it click quick.`;
+        const guessedLetters = new Set();
+
+        let guessedString = "";
+        let currentState = 0;
+        let instance = undefined;
+
+        // https://gist.github.com/chrishorton/8510732aa9a80a03c829b09f12e20d9c
+        const HANGMAN_PICS = [`
+  +---+
+  |   |
+      |
+      |
+      |
+      |
+=========`, `
+  +---+
+  |   |
+  O   |
+      |
+      |
+      |
+=========`, `
+  +---+
+  |   |
+  O   |
+  |   |
+      |
+      |
+=========`, `
+  +---+
+  |   |
+  O   |
+ /|   |
+      |
+      |
+=========`, `
+  +---+
+  |   |
+  O   |
+ /|\\  |
+      |
+      |
+=========`, `
+  +---+
+  |   |
+  O   |
+ /|\\  |
+ /    |
+      |
+=========`, `
+  +---+
+  |   |
+  O   |
+ /|\\  |
+ / \\  |
+      |
+=========`]
+
+        function getRedactedWord() {
+            return targetWord.split("").map((l) => {
+                if (!l.match(/[a-zA-Z]/)) {
+                    return l;
+                }
+                if (guessedLetters.has(l.toLowerCase())) {
+                    return l;
+                } else {
+                    return '-';
+                }
+            }).join("");
+        }
+
+        let currentLives = 6;
+
+        function updateUI() {
+            document.querySelector("#lives").textContent = `Lives Remaining: ${currentLives}`;
+            document.querySelector("#targetWord").textContent = `Word: ${getRedactedWord()}`;
+            document.querySelector("#guessedLetters").textContent = `Guessed Letters: ${guessedString}`;
+            document.querySelector("#image").textContent = HANGMAN_PICS[6 - currentLives];
+        }
+
+        function hasWon() {
+            for (const l of targetWord) {
+                if (!l.match(/[a-zA-Z]/)) {
+                    continue
+                }
+                if (!guessedLetters.has(l.toLowerCase())) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        function tryGuess(letter, e) {
+            currentState = instance.exports.check_letter(letter.charCodeAt(0), currentState);
+            const extra = instance.exports.get_extra(currentState);
+            console.log({ currentState, extra });
+
+            guessedLetters.add(letter);
+            guessedString += letter;
+            if (targetWord.indexOf(letter) === -1) {
+                currentLives -= 1;
+            }
+
+            if (extra !== 0) {
+                guessedString += String.fromCharCode(extra);
+            }
+
+            updateUI();
+
+            if (instance.exports.get_final_state() === currentState) {
+                document.querySelector("#keyboard").style.display = "none";
+                document.querySelector("#win").style.display = "block";
+            }
+
+            if (hasWon()) {
+                document.querySelector("#keyboard").style.display = "none";
+                document.querySelector("#win").style.display = "block";
+            } else if (currentLives === 0) {
+                document.querySelector("#keyboard").style.display = "none";
+                document.querySelector("#lose").style.display = "block";
+            }
+
+            // Don't redirect.
+            e.preventDefault();
+            return false;
+        }
+
+        const letters = "abcdefghijklmnopqrstuvwxyz".split("");
+
+        for (const letter of letters) {
+            const a = document.createElement("button");
+            a.textContent = letter;
+            a.href = "about:blank";
+            a.addEventListener("click", tryGuess.bind(a, letter));
+
+            document.querySelector("#keyboard").appendChild(a);
+        }
+
+        document.querySelector("#winTryAgain").addEventListener("click", () => {
+            document.location.reload();
+        });
+        document.querySelector("#loseTryAgain").addEventListener("click", () => {
+            document.location.reload();
+        });
+
+        (async () => {
+            const createInstance = async () => {
+                const path = 'wasm/stage1.wasm';
+                const response = await fetch(path);
+                const bytes = await response.arrayBuffer();
+                const { instance } = await WebAssembly.instantiate(bytes, {});
+
+                return instance;
+            };
+
+            instance = await createInstance();
+
+            currentState = instance.exports.get_initial_state();
+            console.log("initial state is", currentState);
+        })();
+
+
+        updateUI();
+    </script>
+</body>
+
+</html>

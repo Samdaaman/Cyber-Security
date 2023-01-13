@@ -1,0 +1,9 @@
+You thought you were pretty good at Wordle aye? Are you this fast though? Portle is a Wordle look-alike where you have to guess the correct port!
+
+If you guess an incorrect digit, a '-' will appear in the guessed position If you guess the right digit, but in the wrong spot, a '+' will appear in the guessed position If you guess the right digit in the right spot, a '=' will appear in the guessed position
+
+You have 5 seconds to solve each round, and there are 5 rounds to solve... Good luck!
+
+Challenge by @tmalc
+
+nc austiccquals.cyber.uq.edu.au 3005

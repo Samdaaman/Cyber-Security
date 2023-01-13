@@ -1,0 +1,5 @@
+Eve bet me she could uncover any message I sent. Well shows her! I found the most secure encryption algorithm I could find and made a program to prove just how secure it is!
+
+Challenge by @tmalc
+
+nc austiccquals.cyber.uq.edu.au 7331

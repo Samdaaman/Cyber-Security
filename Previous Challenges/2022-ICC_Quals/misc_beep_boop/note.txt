@@ -1,0 +1,6 @@
+Beep. Boop beep. Beep beep boop.
+
+Note: the output will be the contents of the flag. i.e., if you decode message, then the flag is of the format:
+
+oiccflag{<message>}
+Challenge by @tmalc

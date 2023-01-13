@@ -1,0 +1,3 @@
+Your friend has begun boasting about the password encryptor she made. She makes a bet that you cannot decrypt the encrypted password given.
+
+Challange by @Sealgair
