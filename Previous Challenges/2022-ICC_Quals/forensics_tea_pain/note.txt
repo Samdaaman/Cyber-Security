@@ -1,0 +1,5 @@
+Your friend watched a couple of episodes of Mr Robot and decided that the best way to store his password was through steganography. Unfortunately he lost his password to access his passwords hidden with Steghide. He remembers doing something with .html file to make a recovery key, but he doesn't remember what. Can you help your friend recover his passwords?
+
+Fixed: awesome_visual.jpg
+
+Challenge by @Sealgair

@@ -1,0 +1,1 @@
+b"Congratulations! Solved in 0.31 seconds!\nYou solved them all! Here's a little something for your troubles\noiccflag{w1nN1n6_5h0uld_b3_fUn}\n\nYou took too long to guess! Try again\n"
