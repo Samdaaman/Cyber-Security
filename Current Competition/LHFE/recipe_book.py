@@ -135,16 +135,16 @@ class StegSolveRecipe(Recipe):
                 # for each plane on a certain channel
                 for plane_number in range(8):
                     # get the plane
-                    img_plane = Image.new('1', [width, height])
+                    img_plane = Image.new('1', (width, height))
                     new_img_pxl_values = img_plane.load()
                     # go over each pixel in the image
                     for x in range(width):
                         for y in range(height):
-                            pixel_value_colour = pxl_data[x, y]
-                            if isinstance(pixel_value_colour, int):
-                                pixel_value_channel = pixel_value_colour
+                            pixel_value = pxl_data[x, y]
+                            if isinstance(pixel_value, int):
+                                pixel_value_channel = pixel_value
                             else:
-                                pixel_value_channel = pixel_value_colour[channel_index]
+                                pixel_value_channel = pixel_value[channel_index]
                             pixel_value_channel_bin = bin(pixel_value_channel)[2:].zfill(8)
                             pixel_value_plane = pixel_value_channel_bin[7 - plane_number]
                             new_img_pxl_values[x, y] = 255 * int(pixel_value_plane),
@@ -154,20 +154,35 @@ class StegSolveRecipe(Recipe):
                     recipe_output.add_image_path(os.path.join(rel_path, filename))
 
                 # get the overall channel image
-                img_overall = Image.new('L', [width, height])
+                img_overall = Image.new('L', (width, height))
                 new_img_pxl_values = img_overall.load()
                 # go over each pixel
                 for x in range(width):
                     for y in range(height):
-                        pixel_value_colour = pxl_data[x, y]
-                        if isinstance(pixel_value_colour, int):
-                            pixel_value_channel = pixel_value_colour
+                        pixel_value = pxl_data[x, y]
+                        if isinstance(pixel_value, int):
+                            pixel_value_channel = pixel_value
                         else:
-                            pixel_value_channel = pixel_value_colour[channel_index]
+                            pixel_value_channel = pixel_value[channel_index]
                         new_img_pxl_values[x, y] = int(pixel_value_channel)
                 # save the image
                 filename = f'{img_orig.mode[channel_index]}_Overall.png'
                 img_overall.save(os.path.join(out_path, filename))
+                recipe_output.add_image_path(os.path.join(rel_path, filename))
+
+            # print LSB from all channels
+            if len(img_orig.mode) > 1:
+                img_lsb = Image.new(img_orig.mode, (width, height))
+                new_img_pxl_values = img_lsb.load()
+                for x in range(width):
+                    for y in range(height):
+                        new_pixel_values = []
+                        for value in pxl_data[x, y]:
+                            new_pixel_values.append(255*(value & 1))
+                        new_img_pxl_values[x, y] = tuple(new_pixel_values)
+                # save the image
+                filename = f'all_lsb.png'
+                img_lsb.save(os.path.join(out_path, filename))
                 recipe_output.add_image_path(os.path.join(rel_path, filename))
 
         except KeyboardInterrupt as ex:

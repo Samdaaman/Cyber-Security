@@ -4,9 +4,9 @@ from .constants import CURRENT_DIR, QUALITY, ALL_EXTENSION
 
 
 class Target:
-    def __init__(self, rel_path: str, parent_target=None):
+    def __init__(self, rel_path: str, parent_target: Optional['Target']=None):
         self.rel_path = rel_path
-        self.parent_target = parent_target  # type: Target
+        self.parent_target = parent_target  # type: Optional[Target]
         self.file_name = os.path.basename(rel_path)
         self.folder = os.path.split(rel_path)[0]
         self.extension = self.file_name.split('.')[-1]
@@ -26,7 +26,7 @@ class TargetTracker:
         if force or target.rel_path not in self._done_paths():
             self._current_targets.append(target)
             return True
-        print(self._done_paths())
+        return False
 
     def get_all_done(self) -> List[Target]:
         return self._done_targets.copy()
@@ -73,7 +73,7 @@ class RecipeOutput:
         self.description = description  # type: str
         self._raw_output = []  # type: List[str]
         self._formatted_output = []  # type: List[str]
-        self.quality = QUALITY.UNDEFINED  # type: QUALITY
+        self.quality = QUALITY.UNDEFINED  # type: str
         self.possible_flags = []  # type: List[Tuple[str, str]]
         self.image_paths = []  # type: List[str]
 

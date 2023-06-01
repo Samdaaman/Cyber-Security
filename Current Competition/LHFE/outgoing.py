@@ -42,6 +42,7 @@ def add_output(target: Target, recipe_outputs: List[RecipeOutput]):
 
     output_lines = [
         f'[Go back to contents]({"../" * len(folders)}contents.md)',
+        f'',
         f'# Target: {target.file_name}  -  Quality: {target.highest_quality}',
         f'## Path: {target.rel_path}',
         f'---',
@@ -54,7 +55,7 @@ def add_output(target: Target, recipe_outputs: List[RecipeOutput]):
 
     output_lines.append('')
     output_lines.append('---')
-    output_lines.append('&nbsp;')
+    output_lines.append('\n')
 
     for recipe_output in recipe_outputs:
         output_lines.append(f'### Recipe: {recipe_output.recipe.name} - Quality: {recipe_output.quality}')
@@ -63,18 +64,18 @@ def add_output(target: Target, recipe_outputs: List[RecipeOutput]):
         for line in recipe_output.formatted():
             output_lines.append(line)
         output_lines.append(f'```')
-        output_lines.append('&nbsp;')
+        output_lines.append('\n')
         output_lines.append('')
 
         if len(recipe_output.image_paths) > 0:
             for image_rel_path in recipe_output.image_paths:
                 output_lines.append(os.path.split(image_rel_path)[1])
                 output_lines.append(f'![{image_rel_path}]({image_rel_path})')
-                output_lines.append('&nbsp;')
+                output_lines.append('\n')
                 output_lines.append('')
 
     with open(get_file_name_for_target(target), 'w') as fh:
-        fh.write('  \n'.join(output_lines))
+        fh.write('\n'.join(output_lines))
 
     _contents_page_update()
 
